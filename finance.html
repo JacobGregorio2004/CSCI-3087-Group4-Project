@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>
+      MyPlanner+ Finance
+    </title>
+    <link href="css/finance.css" rel="stylesheet"/>
+    <script defer="" src="js/finance.js">
+    </script>
+  </head>
+  <body>
+    <h1 class="app-title">
+      MyPlanner
+      <span>
+        +
+      </span>
+    </h1>
+    <main class="folder">
+      <div class="folder-label">
+        MY FINANCES ✦
+      </div>
+      <section class="paper finance-page" id="financePage">
+        <div class="topline">
+          <a class="back-link" href="MyPlannerPlus.html">
+            ← Back to MyPlanner+
+          </a>
+          <span class="finance-muted" id="financePeriodDate">
+          </span>
+        </div>
+        <div class="finance-heading">
+          <div>
+            <div class="finance-eyebrow">
+              YOUR MONEY, ORGANIZED
+            </div>
+            <h2>
+              Finance Dashboard 💸
+            </h2>
+            <p class="finance-muted">
+              Track income, expenses, and your spending goals in one cozy place.
+            </p>
+          </div>
+          <div aria-label="Summary period" class="finance-period">
+            <button class="active" id="financeWeek" type="button">
+              This week
+            </button>
+            <button id="financeMonth" type="button">
+              This month
+            </button>
+          </div>
+        </div>
+        <div class="finance-stats">
+          <article class="finance-stat balance">
+            <span>
+              Current balance
+            </span>
+            <strong id="financeBalance">
+              $0.00
+            </strong>
+            <small>
+              Starting balance + all activity
+            </small>
+          </article>
+          <article class="finance-stat earned">
+            <span>
+              Income this period
+            </span>
+            <strong id="financeIncome">
+              $0.00
+            </strong>
+            <small>
+              Money coming in
+            </small>
+          </article>
+          <article class="finance-stat spent">
+            <span>
+              Spent this period
+            </span>
+            <strong id="financeSpent">
+              $0.00
+            </strong>
+            <small>
+              Money going out
+            </small>
+          </article>
+          <article class="finance-stat remaining">
+            <span>
+              Budget remaining
+            </span>
+            <strong id="financeRemaining">
+              Not set
+            </strong>
+            <small id="financeBudgetHint">
+              Set a budget to get started
+            </small>
+          </article>
+        </div>
+        <div class="finance-panels">
+          <section class="finance-panel">
+            <div class="finance-panel-title">
+              <h3>
+                Spending plan 🌷
+              </h3>
+              <span id="financePeriodLabel">
+                Weekly spending limit
+              </span>
+            </div>
+            <p class="finance-muted">
+              Choose a spending limit for the selected period and keep an eye on your progress.
+            </p>
+            <form class="finance-inline-form" id="budgetForm">
+              <label for="budgetAmount">
+                Budget amount ($)
+              </label>
+              <div class="finance-input-row">
+                <input id="budgetAmount" max="999999999" min="0" placeholder="e.g. 150.00" required="" step="0.01" type="number"/>
+                <button type="submit">
+                  Save budget
+                </button>
+              </div>
+            </form>
+            <div aria-label="Budget used" aria-valuemax="100" aria-valuemin="0" aria-valuenow="0" class="finance-progress" id="budgetProgress" role="progressbar">
+              <div id="budgetProgressFill">
+              </div>
+            </div>
+            <p class="finance-muted" id="budgetSummary">
+              Set a weekly or monthly spending limit.
+            </p>
+            <form class="starting-balance" id="startingBalanceForm">
+              <label for="startingBalance">
+                Starting balance ($)
+              </label>
+              <div class="finance-input-row">
+                <input id="startingBalance" max="999999999" min="0" placeholder="0.00" required="" step="0.01" type="number"/>
+                <button type="submit">
+                  Update
+                </button>
+              </div>
+              <p class="finance-footnote">
+                Set this to the amount you had before tracking transactions here.
+              </p>
+            </form>
+          </section>
+          <section class="finance-panel">
+            <div class="finance-panel-title">
+              <h3>
+                Where it goes 🧁
+              </h3>
+              <span>
+                Expenses by category
+              </span>
+            </div>
+            <div class="finance-chart-row">
+              <div aria-label="No expenses for this period" class="finance-donut" id="financeDonut" role="img">
+                <div class="finance-donut-center">
+                  <span>
+                    Total spent
+                  </span>
+                  <strong id="financeDonutTotal">
+                    $0.00
+                  </strong>
+                </div>
+              </div>
+              <div class="finance-legend" id="financeLegend">
+                <p class="finance-muted">
+                  Add an expense to see your breakdown.
+                </p>
+              </div>
+            </div>
+          </section>
+        </div>
+        <div class="finance-panels">
+          <section class="finance-panel">
+            <h3>
+              Add a transaction ✨
+            </h3>
+            <form class="finance-transaction-form" id="transactionForm">
+              <div class="finance-form-grid">
+                <div>
+                  <label for="transactionType">
+                    Type
+                  </label>
+                  <select id="transactionType">
+                    <option value="expense">
+                      Expense
+                    </option>
+                    <option value="income">
+                      Income
+                    </option>
+                  </select>
+                </div>
+                <div>
+                  <label for="transactionCategory">
+                    Category
+                  </label>
+                  <select id="transactionCategory">
+                  </select>
+                </div>
+              </div>
+              <label for="transactionDescription">
+                Description
+              </label>
+              <input id="transactionDescription" maxlength="100" placeholder="e.g. Groceries or paycheck" required=""/>
+              <div class="finance-form-grid">
+                <div>
+                  <label for="transactionAmount">
+                    Amount ($)
+                  </label>
+                  <input id="transactionAmount" max="999999999" min="0.01" placeholder="0.00" required="" step="0.01" type="number"/>
+                </div>
+                <div>
+                  <label for="transactionDate">
+                    Date
+                  </label>
+                  <input id="transactionDate" required="" type="date"/>
+                </div>
+              </div>
+              <button class="finance-add-button" type="submit">
+                ＋ Add transaction
+              </button>
+              <p aria-live="polite" class="finance-message" id="financeMessage">
+              </p>
+            </form>
+          </section>
+          <section class="finance-panel">
+            <div class="finance-panel-title">
+              <h3>
+                Recent transactions 📝
+              </h3>
+              <span id="transactionCount">
+                0 entries
+              </span>
+            </div>
+            <div class="finance-transaction-list" id="transactionList">
+              <p class="finance-muted finance-empty">
+                No transactions in this period yet.
+              </p>
+            </div>
+          </section>
+        </div>
+        <p class="notice">
+          Your finance details are saved in this browser using the same
+          <code>
+            myplannerPlusData_v1
+          </code>
+          storage record as the original planner. Browser storage is not encrypted or a substitute for a secure banking app.
+        </p>
+      </section>
+    </main>
+  </body>
+</html>
+
