@@ -1,0 +1,16 @@
+name: MyPlanner+ Automated Testing
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download repository
+        uses: actions/checkout@v4
+
+      - name: Verify Github Actions
+        run: echo "MyPlanner+ testing pipeline is working!"
