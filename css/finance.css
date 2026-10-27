@@ -514,3 +514,8 @@ body {
     width: 190px;
   }
 }
+
+#logoutButton { font: inherit; cursor: pointer; }
+
+.bill-row button { font: 700 12px 'Trebuchet MS', Arial, sans-serif; padding: 6px 9px; white-space: nowrap; }
+@media (max-width: 550px) { .bill-row { flex-wrap: wrap; } }

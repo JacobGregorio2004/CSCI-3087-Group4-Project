@@ -12,6 +12,7 @@
   --pink: #f3b4c9;
   --green: #b8d8c2;
   --blue: #b8d5ed;
+  --pink-dark: #d986a4;
 }
 
 body {
@@ -33,6 +34,16 @@ button {
   max-width: 1400px;
   margin: auto;
   min-height: 90vh;
+}
+
+.app-title {
+  text-align: center;
+  font-size: clamp(38px,6vw,62px);
+  margin-bottom: 40px;
+}
+
+.app-title span {
+  color: var(--pink-dark);
 }
 
 .top-title {
@@ -91,6 +102,8 @@ button {
   border-bottom: 0;
   border-radius: 12px 12px 0 0;
   font-weight: bold;
+  color: var(--brown);
+  text-decoration: none;
 }
 
 .tab.active {
@@ -945,3 +958,8 @@ button {
 .clear-calendar-stickers-button {
   font-size: 13px;
 }
+
+/* Signed-in account label and log-out control. */
+.user-name { display: flex; gap: 10px; align-items: center; }
+#logoutButton { padding: 4px 10px; border: 1px solid var(--brown); border-radius: 7px;
+  background: var(--pink); font-size: 13px; font-weight: bold; cursor: pointer; }
