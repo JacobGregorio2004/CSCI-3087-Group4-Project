@@ -1,37 +1,31 @@
 (() => {
-    const STORAGE_KEY = "myplannerPlusData_v1";
+    const $ = id => document.getElementById(id);
+
     const today = new Date();
     let viewYear = today.getFullYear();
     let viewMonth = today.getMonth();
     let selectedDate = toISODate(today);
     let activeCategory = "creative";
+
     let customCategories = [];
     let events = [];
     let tasks = [];
-    const $ = id => document.getElementById(id);
-    const safeLoad = () => {
-        try {
-            const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-            events = Array.isArray(saved.events) ? saved.events : [];
-            tasks = Array.isArray(saved.tasks) ? saved.tasks : [];
-            customCategories = Array.isArray(saved.customCategories) ? saved.customCategories : [];
+
+    let readyToSave = false;
+    let saveErrorShown = false;
+    
+    function reportSaveError(error) {
+        console.error("Could not save MyPlanner+ data:", error);
+        if (!saveErrorShown) {
+            saveErrorShown = true;
+            alert("Your changes could not be saved to the database. " + error.message);
         }
-        catch {
-            events = [];
-            tasks = [];
-            customCategories = [];
-        }
-    };
-    const save = () => {
-        try {
-            const storedData = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-            const preservedData = storedData && typeof storedData === "object" && !Array.isArray(storedData) ? storedData : {};
-            localStorage.setItem(STORAGE_KEY, JSON.stringify({ ...preservedData, events, tasks, customCategories }));
-        }
-        catch {
-            alert("Your browser could not save changes. Check browser storage settings.");
-        }
-    };
+    }
+    function save() {
+        if (!readyToSave) return;
+        MyPlannerAPI.saveSection("planner", { events, tasks, customCategories })
+            .catch(reportSaveError);
+    }
     function toISODate(date) {
         return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
     }
@@ -265,7 +259,7 @@
         }
     }
     $("tabs").addEventListener("click", e => {
-        const button = e.target.closest(".tab");
+        const button = e.target.closest("button.tab[data-category]");
         if (button)
             activateCategory(button.dataset.category, button);
     });
@@ -293,22 +287,11 @@
         $("toggleCalendarDetails").setAttribute("aria-expanded", String(opening));
         $("toggleCalendarDetails").textContent = opening ? "✏️ Hide planner details" : "✏️ Show planner details";
     });
-    const CALENDAR_DECOR_KEY = "myplannerPlusCalendarDecorations_v1";
     let calendarDecorations = {};
-    try {
-        const savedDecor = JSON.parse(localStorage.getItem(CALENDAR_DECOR_KEY) || "{}");
-        calendarDecorations = savedDecor && typeof savedDecor === "object" && !Array.isArray(savedDecor) ? savedDecor : {};
-    }
-    catch {
-        calendarDecorations = {};
-    }
     function saveCalendarDecorations() {
-        try {
-            localStorage.setItem(CALENDAR_DECOR_KEY, JSON.stringify(calendarDecorations));
-        }
-        catch {
-            alert("This sticker could not be saved because browser storage is full. Try a smaller photo.");
-        }
+        if (!readyToSave) return;
+        MyPlannerAPI.saveSection("calendarDecorations", calendarDecorations)
+            .catch(reportSaveError);
     }
     function renderCalendarStickerPreview() {
         const preview = $("calendarStickerPreview");
@@ -471,13 +454,14 @@
     let draggedSticker = null;
     let selectedStickerId = null;
     const board = $("moodBoard");
+    let boardSaveTimer = null;
     function boardSave() {
-        try {
-            const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-            saved.boardStickers = boardStickers;
-            localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
-        }
-        catch { /* board remains usable for this session if storage is unavailable */ }
+        if (!readyToSave) return;
+        // Debounce typing in notes so each keystroke does not cause a database write.
+        clearTimeout(boardSaveTimer);
+        boardSaveTimer = setTimeout(() => {
+            MyPlannerAPI.saveSection("board", boardStickers).catch(reportSaveError);
+        }, 300);
     }
     function boardRender() {
         board.querySelectorAll(".board-sticker").forEach(el => el.remove());
@@ -661,22 +645,53 @@
             boardRender();
         }
     });
-    safeLoad();
-    try {
-        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-        boardStickers = Array.isArray(saved.boardStickers) ? saved.boardStickers : [];
+    async function initializePlanner() {
+        try {
+            const user = await MyPlannerAPI.requireSession();
+            $("currentUserName").textContent = user.name;
+            const state = await MyPlannerAPI.getState();
+            events = Array.isArray(state.events) ? state.events : [];
+            tasks = Array.isArray(state.tasks) ? state.tasks : [];
+            customCategories = Array.isArray(state.customCategories) ? state.customCategories : [];
+            boardStickers = Array.isArray(state.boardStickers) ? state.boardStickers : [];
+            calendarDecorations = state.calendarDecorations && !Array.isArray(state.calendarDecorations) ? state.calendarDecorations : {};
+            customCategories.forEach(category => {
+                const button = document.createElement("button");
+                button.className = "tab";
+                button.dataset.category = category.key;
+                button.textContent = "📁 " + category.name;
+                $("tabs").insertBefore(button, $("addFolderBtn"));
+            });
+            readyToSave = true;
+            boardRender();
+            renderCalendar();
+            renderDayDetails();
+            renderCalendarStickerPreview();
+        } catch (error) {
+            console.error(error);
+            if (error.message !== "Please log in.") {
+                alert("Unable to load your planner from the database: " + error.message);
+            }
+        }
     }
-    catch {
-        boardStickers = [];
+    async function leavePlanner(destination) {
+        clearTimeout(boardSaveTimer);
+        if (readyToSave) {
+            await MyPlannerAPI.saveSection("board", boardStickers);
+        }
+        await MyPlannerAPI.flushSaves();
+        if (destination === "logout") {
+            await MyPlannerAPI.logout();
+        } else {
+            window.location.href = destination;
+        }
     }
-    customCategories.forEach(c => {
-        const button = document.createElement("button");
-        button.className = "tab";
-        button.dataset.category = c.key;
-        button.textContent = "📁 " + c.name;
-        $("tabs").insertBefore(button, $("addFolderBtn"));
+    document.querySelector('a.tab[href="finance.html"]').addEventListener("click", event => {
+        event.preventDefault();
+        leavePlanner("finance.html").catch(reportSaveError);
     });
-    boardRender();
-    renderCalendar();
-    renderDayDetails();
+    $("logoutButton").addEventListener("click", () => {
+        leavePlanner("logout").catch(reportSaveError);
+    });
+    initializePlanner();
 })();

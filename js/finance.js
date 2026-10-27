@@ -1,43 +1,32 @@
 "use strict";
-const STORAGE_KEY = "myplannerPlusData_v1";
 const FINANCE_COLORS = {
     Food: "#e7a5bb", Housing: "#d5bb83", Transportation: "#a4c4e5",
     School: "#b8a3d8", Shopping: "#9dcdb1", Bills: "#f2c47c", Other: "#aeb7c1"
 };
 const FINANCE_CATEGORIES = Object.keys(FINANCE_COLORS);
 let financePeriod = "week";
-let plannerData = loadPlannerData();
+let plannerData = { finance: defaultFinance() };
+let financeSaveErrorShown = false;
 function defaultFinance() { return { startingBalanceCents: 0, budgets: {}, transactions: [] }; }
-function loadPlannerData() {
-    try {
-        const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
-        if (!saved || typeof saved !== "object" || Array.isArray(saved))
-            return {};
-        return saved;
-    }
-    catch (error) {
-        return {};
-    }
-}
 function normalizeFinance(data) {
     const f = data && typeof data === "object" ? data : {};
     return {
         startingBalanceCents: Number.isSafeInteger(f.startingBalanceCents) && f.startingBalanceCents >= 0 ? f.startingBalanceCents : 0,
         budgets: f.budgets && typeof f.budgets === "object" ? f.budgets : {},
-        transactions: Array.isArray(f.transactions) ? f.transactions.filter(t => t && (t.type === "income" || t.type === "expense") && Number.isSafeInteger(t.amountCents) && t.amountCents > 0 && /^\d{4}-\d{2}-\d{2}$/.test(t.date)) : []
+        transactions: Array.isArray(f.transactions) ? f.transactions.filter(t => t &&
+            (t.type === "income" || t.type === "expense") && Number.isSafeInteger(t.amountCents) &&
+            t.amountCents > 0 && /^\d{4}-\d{2}-\d{2}$/.test(t.date)) : []
     };
 }
-plannerData.finance = normalizeFinance(plannerData.finance);
+function reportFinanceSaveError(error) {
+    console.error(error);
+    if (!financeSaveErrorShown) {
+        financeSaveErrorShown = true;
+        alert("Could not save to the database: " + error.message);
+    }
+}
 function savePlanner() {
-    try {
-        const latest = loadPlannerData();
-        latest.finance = plannerData.finance;
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(latest));
-        plannerData = latest;
-    }
-    catch (error) {
-        alert("Could not save finance data in this browser. Check browser storage settings.");
-    }
+    MyPlannerAPI.saveSection("finance", plannerData.finance).catch(reportFinanceSaveError);
 }
 function financeMoney(cents) { return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(cents / 100); }
 function financeCents(value, allowZero = false) {
@@ -46,7 +35,7 @@ function financeCents(value, allowZero = false) {
         return null;
     const parts = s.split(".");
     const cents = Number(parts[0]) * 100 + Number((parts[1] || "").padEnd(2, "0"));
-    if (!Number.isSafeInteger(cents) || cents > 99999999900)
+    if (!Number.isSafeInteger(cents) || cents > 9999999999)
         return null;
     return allowZero ? (cents >= 0 ? cents : null) : (cents > 0 ? cents : null);
 }
@@ -142,11 +131,6 @@ function initFinance() {
         savePlanner();
         renderFinance();
     });
-    window.addEventListener("storage", e => { if (e.key === STORAGE_KEY) {
-        plannerData = loadPlannerData();
-        plannerData.finance = normalizeFinance(plannerData.finance);
-        renderFinance();
-    } });
     renderFinance();
 }
 function renderFinance() {
@@ -248,4 +232,117 @@ function renderFinance() {
         list.appendChild(item);
     });
 }
-initFinance();
+async function loadBills() {
+    const result = await MyPlannerAPI.bills();
+    renderBills(result.bills);
+}
+function renderBills(bills) {
+    const list = document.getElementById("billList");
+    list.replaceChildren();
+    if (!bills.length) {
+        const empty = document.createElement("p");
+        empty.className = "finance-muted";
+        empty.textContent = "No bills added yet.";
+        list.appendChild(empty);
+        return;
+    }
+    bills.forEach(bill => {
+        const item = document.createElement("div");
+        item.className = "finance-transaction bill-row";
+        const info = document.createElement("div");
+        const name = document.createElement("strong");
+        name.textContent = bill.name;
+        const details = document.createElement("small");
+        details.textContent = (bill.due_date || "No due date") + " · " +
+            (bill.paid ? "Paid" : "Unpaid") + " · " + financeMoney(bill.amountCents);
+        info.append(name, details);
+        const toggle = document.createElement("button");
+        toggle.type = "button";
+        toggle.textContent = bill.paid ? "Mark unpaid" : "Mark paid";
+        toggle.addEventListener("click", async () => {
+            toggle.disabled = true;
+            try {
+                await MyPlannerAPI.bills({ action: "update", bill_id: bill.bill_id, name: bill.name,
+                    amountCents: bill.amountCents, due_date: bill.due_date, paid: !bill.paid });
+                await loadBills();
+            } catch (error) {
+                alert("Could not update bill: " + error.message);
+                toggle.disabled = false;
+            }
+        });
+        const del = document.createElement("button");
+        del.type = "button";
+        del.textContent = "×";
+        del.setAttribute("aria-label", "Delete bill " + bill.name);
+        del.addEventListener("click", async () => {
+            if (!confirm("Delete bill " + bill.name + "?")) return;
+            del.disabled = true;
+            try {
+                await MyPlannerAPI.bills({ action: "delete", bill_id: bill.bill_id });
+                await loadBills();
+            } catch (error) {
+                alert("Could not delete bill: " + error.message);
+                del.disabled = false;
+            }
+        });
+        item.append(info, toggle, del);
+        list.appendChild(item);
+    });
+}
+function initBills() {
+    const form = document.getElementById("billForm");
+    form.addEventListener("submit", async event => {
+        event.preventDefault();
+        const name = document.getElementById("billName").value.trim();
+        const amount = financeCents(document.getElementById("billAmount").value, true);
+        const date = document.getElementById("billDueDate").value;
+        const message = document.getElementById("billMessage");
+        if (!name || amount === null) {
+            message.textContent = "Enter a valid name and amount.";
+            return;
+        }
+        const saveButton = form.querySelector("button[type=submit]");
+        saveButton.disabled = true;
+        try {
+            await MyPlannerAPI.bills({ action: "create", name,
+                amountCents: amount, due_date: date || null, paid: false });
+            await loadBills();
+            form.reset();
+            message.textContent = "Bill saved!";
+        } catch (error) {
+            message.textContent = "Could not save bill: " + error.message;
+        } finally {
+            saveButton.disabled = false;
+        }
+    });
+    loadBills().catch(error => {
+        document.getElementById("billMessage").textContent = error.message;
+    });
+}
+async function initializeFinance() {
+    try {
+        await MyPlannerAPI.requireSession();
+        const state = await MyPlannerAPI.getState();
+        plannerData.finance = normalizeFinance(state.finance);
+        initFinance();
+        initBills();
+    } catch (error) {
+        console.error(error);
+        if (error.message !== "Please log in.") {
+            alert("Unable to load finance data from the database: " + error.message);
+        }
+    }
+}
+document.querySelector('.back-link[href="MyPlannerPlus.html"]').addEventListener("click", async event => {
+    event.preventDefault();
+    try {
+        await MyPlannerAPI.flushSaves();
+        window.location.href = "MyPlannerPlus.html";
+    } catch (error) {
+        reportFinanceSaveError(error);
+    }
+});
+document.getElementById("logoutButton").addEventListener("click", () => {
+    MyPlannerAPI.logout().catch(reportFinanceSaveError);
+});
+initializeFinance();
