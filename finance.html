@@ -7,6 +7,7 @@
       MyPlanner+ Finance
     </title>
     <link href="css/finance.css" rel="stylesheet"/>
+    <script defer src="js/api.js"></script>
     <script defer="" src="js/finance.js">
     </script>
   </head>
@@ -26,6 +27,7 @@
           <a class="back-link" href="MyPlannerPlus.html">
             ← Back to MyPlanner+
           </a>
+          <button class="back-link" id="logoutButton" type="button">Log out</button>
           <span class="finance-muted" id="financePeriodDate">
           </span>
         </div>
@@ -114,7 +116,7 @@
                 Budget amount ($)
               </label>
               <div class="finance-input-row">
-                <input id="budgetAmount" max="999999999" min="0" placeholder="e.g. 150.00" required="" step="0.01" type="number"/>
+                <input id="budgetAmount" max="99999999.99" min="0" placeholder="e.g. 150.00" required="" step="0.01" type="number"/>
                 <button type="submit">
                   Save budget
                 </button>
@@ -132,7 +134,7 @@
                 Starting balance ($)
               </label>
               <div class="finance-input-row">
-                <input id="startingBalance" max="999999999" min="0" placeholder="0.00" required="" step="0.01" type="number"/>
+                <input id="startingBalance" max="99999999.99" min="0" placeholder="0.00" required="" step="0.01" type="number"/>
                 <button type="submit">
                   Update
                 </button>
@@ -207,7 +209,7 @@
                   <label for="transactionAmount">
                     Amount ($)
                   </label>
-                  <input id="transactionAmount" max="999999999" min="0.01" placeholder="0.00" required="" step="0.01" type="number"/>
+                  <input id="transactionAmount" max="99999999.99" min="0.01" placeholder="0.00" required="" step="0.01" type="number"/>
                 </div>
                 <div>
                   <label for="transactionDate">
@@ -239,13 +241,31 @@
             </div>
           </section>
         </div>
-        <p class="notice">
-          Your finance details are saved in this browser using the same
-          <code>
-            myplannerPlusData_v1
-          </code>
-          storage record as the original planner. Browser storage is not encrypted or a substitute for a secure banking app.
-        </p>
+        <div class="finance-panels">
+          <section class="finance-panel">
+            <h3>My bills 📬</h3>
+            <p class="finance-muted">Track upcoming bills and mark them paid. Bills are separate from recorded spending.</p>
+            <form id="billForm" class="finance-transaction-form">
+              <label for="billName">Bill name</label>
+              <input id="billName" maxlength="255" placeholder="e.g. Internet bill" required>
+              <div class="finance-form-grid">
+                <div><label for="billAmount">Amount ($)</label>
+                  <input id="billAmount" type="number" min="0" max="99999999.99" step="0.01" required></div>
+                <div><label for="billDueDate">Due date</label>
+                  <input id="billDueDate" type="date"></div>
+              </div>
+              <button class="finance-add-button" type="submit">+ Save bill</button>
+              <p id="billMessage" class="finance-message" role="status"></p>
+            </form>
+          </section>
+          <section class="finance-panel">
+            <h3>Saved bills 🧾</h3>
+            <div id="billList" class="finance-transaction-list">
+              <p class="finance-muted">No bills added yet.</p>
+            </div>
+          </section>
+        </div>
+        <p class="notice">Your entries are saved to the MyPlanner+ database under your signed-in account. This is a student budgeting tool, not a banking service.</p>
       </section>
     </main>
   </body>
