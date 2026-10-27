@@ -12,5 +12,13 @@ jobs:
       - name: Download repository
         uses: actions/checkout@v4
 
-      - name: Verify Github Actions
-        run: echo "MyPlanner+ testing pipeline is working!"
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Run JavaScript Linter
+        run: npx --yes eslint@9 js/budgetCalculator.js tests/budgetCalculator.test.js
+
+      - name: Run JavaScript Tests
+        run: node --test tests/budgetCalculator.test.js
