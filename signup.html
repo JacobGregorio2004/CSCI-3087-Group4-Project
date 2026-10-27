@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sign up — MyPlanner+</title>
+  <link rel="stylesheet" href="css/auth.css">
+  <script defer src="js/api.js"></script>
+  <script defer src="js/auth.js"></script>
+</head>
+<body>
+  <main class="auth-card">
+    <h1>MyPlanner<span>+</span></h1>
+    <h2>Create your account</h2>
+    <form id="authForm" data-action="register">
+      <label for="name">Username</label>
+      <input id="name" type="text" maxlength="50" autocomplete="username" required>
+      <label for="email">Email</label>
+      <input id="email" type="email" maxlength="100" autocomplete="email" required>
+      <label for="password">Password (at least 8 characters)</label>
+      <input id="password" type="password" minlength="8" maxlength="256" autocomplete="new-password" required>
+      <button type="submit">Create account</button>
+      <p id="authMessage" role="alert" aria-live="polite"></p>
+    </form>
+    <p>Already have an account? <a href="login.html">Log in</a></p>
+  </main>
+</body>
+</html>
