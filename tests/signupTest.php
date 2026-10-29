@@ -1,10 +1,13 @@
 <?php
 declare(strict_types=1);
-require_once __DIR__ . '/testHelpers.php';
-runChecks(function (): void {
-    // Precondition: isolated test DB starts without this account.
-    verify(testSignup('ci-signup@example.test', 'StrongTestPassword!23'), 'Valid signup creates account');
-    verify(!testSignup('ci-signup@example.test', 'StrongTestPassword!23'), 'Duplicate email is rejected');
-    verify(!testSignup('not-an-email', 'StrongTestPassword!23'), 'Malformed email is rejected');
-    verify(!testSignup('', ''), 'Blank signup is rejected');
-});
+require_once __DIR__ . '/httpTestHelpers.php';
+$token = getToken();
+[$status] = requestApi('POST', ['action'=>'register','name'=>'testsignup','email'=>'signup@example.test','password'=>'SafePassword!23'], $token);
+check($status === 201, 'A new user can register');
+$token = getToken();
+[$status] = requestApi('POST', ['action'=>'register','name'=>'duplicate','email'=>'signup@example.test','password'=>'SafePassword!23'], $token);
+check($status === 409, 'Duplicate email is rejected');
+[$status] = requestApi('POST', ['action'=>'register','name'=>'bademail','email'=>'not-an-email','password'=>'SafePassword!23'], $token);
+check($status === 422, 'Invalid email is rejected');
+[$status] = requestApi('POST', ['action'=>'register','name'=>'shortpass','email'=>'short@example.test','password'=>'short'], $token);
+check($status === 422, 'Short password is rejected');
