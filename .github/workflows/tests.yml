@@ -1,15 +1,36 @@
+
 name: MyPlanner+ Automated Testing
 
+# Automatically runs tests whenever code is pushed
+# or a pull request is created.
 on:
   push:
   pull_request:
 
 jobs:
-  test:
+  auth:
     runs-on: ubuntu-latest
 
+    # Creates a temporary MySQL database for testing.
+    # This prevents tests from affecting our actual database.
+    services:
+      mysql:
+        image: mysql:8.0
+        env:
+          MYSQL_ROOT_PASSWORD: root_test_only
+          MYSQL_DATABASE: myplanner_ci
+          MYSQL_USER: ci_user
+          MYSQL_PASSWORD: ci_password_test_only
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -proot_test_only"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+
     steps:
-      # Downloads the latest project files from the GitHub repository.
+      # Downloads the latest project files from GitHub.
       - name: Download repository
         uses: actions/checkout@v4
 
@@ -19,77 +40,85 @@ jobs:
         with:
           node-version: '22'
 
-      # Checks the budget calculator and its test file for
-      # JavaScript coding errors and style violations.
+      # Checks the budget calculator and its test file
+      # for JavaScript coding errors and style violations.
       - name: Run JavaScript Linter
         run: npx --yes eslint@9 js/budgetCalculator.js tests/budgetCalculator.test.js
 
-      # Runs all JavaScript test files to verify that
+      # Runs all JavaScript tests to verify that
       # the tested functions return the expected results.
       - name: Run JavaScript Tests
         run: node --test tests/*.test.js
 
-      # Sets up PHP version 8.2 to run PHP checks and tests.
+      # Sets up PHP version 8.2 with extensions needed
+      # for HTTP requests and MySQL database connections.
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
+          extensions: curl, pdo_mysql
 
-      # Checks all PHP files for syntax errors to ensure
-      # the PHP code can be parsed correctly.
-      - name: Test PHP Syntax
-        run: |
-          find . -type f -name "*.php" \
-            -not -path "./vendor/*" \
-            -print0 | xargs -0 -r -n1 php -l
+      # Checks PHP files in the API and tests folders
+      # for syntax errors before running functionality tests.
+      - name: Check PHP syntax
+        run: find api tests -type f -name '*.php' -print0 | xargs -0 -r -n1 php -l
 
-      # Runs login tests to verify that valid credentials
-      # are accepted and invalid credentials are rejected.
-      - name: Test User Login
-        run: |
-          if [ -f tests/loginTest.php ]; then
-            php tests/loginTest.php
-          else
-            echo "Login test not implemented yet"
-          fi
+      # Creates the temporary test database tables
+      # and adds a test user for authentication testing.
+      - name: Create temporary DB and seed test user
+        env:
+          CI_DB_PASSWORD: ci_password_test_only
+        run: php tests/setup-ci.php
 
-      # Runs signup tests to verify that new accounts
-      # can be created and duplicate accounts are rejected.
-      - name: Test User Signup
+      # Starts a local PHP server that uses the temporary
+      # database instead of our live Turing database.
+      # Waits until the API responds before running tests.
+      - name: Start local PHP API with test-only DB configuration
+        env:
+          CI_DB_PASSWORD: ci_password_test_only
         run: |
-          if [ -f tests/signupTest.php ]; then
-            php tests/signupTest.php
-          else
-            echo "Signup test not implemented yet"
-          fi
+          # Use a temporary runner file; do not commit real database credentials.
+          printf "<?php return ['private_db_file' => '%s/tests/ciDb.php'];\n" "$GITHUB_WORKSPACE" > api/config.php
+          php -S 127.0.0.1:8765 -t . > /tmp/myplanner-php-server.log 2>&1 &
+          echo $! > /tmp/myplanner-php-server.pid
+          for i in $(seq 1 25); do
+            if curl -fsS http://127.0.0.1:8765/api/auth.php > /dev/null; then exit 0; fi
+            sleep 1
+          done
+          cat /tmp/myplanner-php-server.log
+          exit 1
 
-      # Runs logout tests to verify that users can log out
-      # and their sessions are properly ended.
-      - name: Test User Logout
-        run: |
-          if [ -f tests/logoutTest.php ]; then
-            php tests/logoutTest.php
-          else
-            echo "Logout test not implemented yet"
-          fi
+      # Tests user login to verify that correct credentials
+      # are accepted and incorrect credentials are rejected.
+      - name: Test Login
+        env:
+          CI_DB_PASSWORD: ci_password_test_only
+        run: php tests/loginTest.php
 
-      # Runs calendar tests to verify that calendar events
-      # can be created, updated, deleted, and retrieved.
-      - name: Test Calendar Functionality
-        run: |
-          if [ -f tests/calendarTest.php ]; then
-            php tests/calendarTest.php
-          else
-            echo "Calendar test not implemented yet"
-          fi
+      # Tests account registration to verify that valid
+      # accounts can be created and invalid data is rejected.
+      - name: Test Signup
+        env:
+          CI_DB_PASSWORD: ci_password_test_only
+        run: php tests/signupTest.php
 
-      # Runs database tests to verify that the application
-      # can connect to and interact with the MySQL database.
-      - name: Test Database Functionality
-        run: |
-          if [ -f tests/databaseTest.php ]; then
-            php tests/databaseTest.php
-          else
-            echo "Database test not implemented yet"
-          fi
+      # Tests user logout to verify that the user's
+      # authenticated session ends successfully.
+      - name: Test Logout
+        env:
+          CI_DB_PASSWORD: ci_password_test_only
+        run: php tests/logoutTest.php
+
+      # Tests the temporary MySQL database connection
+      # and verifies that database queries work correctly.
+      - name: Test DB
+        env:
+          CI_DB_PASSWORD: ci_password_test_only
+        run: php tests/databaseTest.php
+
+      # Displays PHP server error logs if any test fails.
+      # Helps the team identify and troubleshoot problems.
+      - name: Show server errors if tests fail
+        if: failure()
+        run: cat /tmp/myplanner-php-server.log 2>/dev/null || true
 
