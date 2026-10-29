@@ -9,27 +9,87 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Downloads the latest project files from the GitHub repository.
       - name: Download repository
         uses: actions/checkout@v4
 
+      # Sets up Node.js version 22 to run JavaScript tests.
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22'
 
+      # Checks the budget calculator and its test file for
+      # JavaScript coding errors and style violations.
       - name: Run JavaScript Linter
         run: npx --yes eslint@9 js/budgetCalculator.js tests/budgetCalculator.test.js
 
+      # Runs all JavaScript test files to verify that
+      # the tested functions return the expected results.
       - name: Run JavaScript Tests
-        run: node --test tests/budgetCalculator.test.js
+        run: node --test tests/*.test.js
 
+      # Sets up PHP version 8.2 to run PHP checks and tests.
       - name: Set up PHP
         uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
 
-      - name: Test PHP login syntax
+      # Checks all PHP files for syntax errors to ensure
+      # the PHP code can be parsed correctly.
+      - name: Test PHP Syntax
         run: |
           find . -type f -name "*.php" \
             -not -path "./vendor/*" \
             -print0 | xargs -0 -r -n1 php -l
+
+      # Runs login tests to verify that valid credentials
+      # are accepted and invalid credentials are rejected.
+      - name: Test User Login
+        run: |
+          if [ -f tests/loginTest.php ]; then
+            php tests/loginTest.php
+          else
+            echo "Login test not implemented yet"
+          fi
+
+      # Runs signup tests to verify that new accounts
+      # can be created and duplicate accounts are rejected.
+      - name: Test User Signup
+        run: |
+          if [ -f tests/signupTest.php ]; then
+            php tests/signupTest.php
+          else
+            echo "Signup test not implemented yet"
+          fi
+
+      # Runs logout tests to verify that users can log out
+      # and their sessions are properly ended.
+      - name: Test User Logout
+        run: |
+          if [ -f tests/logoutTest.php ]; then
+            php tests/logoutTest.php
+          else
+            echo "Logout test not implemented yet"
+          fi
+
+      # Runs calendar tests to verify that calendar events
+      # can be created, updated, deleted, and retrieved.
+      - name: Test Calendar Functionality
+        run: |
+          if [ -f tests/calendarTest.php ]; then
+            php tests/calendarTest.php
+          else
+            echo "Calendar test not implemented yet"
+          fi
+
+      # Runs database tests to verify that the application
+      # can connect to and interact with the MySQL database.
+      - name: Test Database Functionality
+        run: |
+          if [ -f tests/databaseTest.php ]; then
+            php tests/databaseTest.php
+          else
+            echo "Database test not implemented yet"
+          fi
+
