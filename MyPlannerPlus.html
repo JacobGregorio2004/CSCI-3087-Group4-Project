@@ -144,26 +144,20 @@
                   <div class="sticker-options note-options">
                     <!-- One single sticker option -->
                     <button class="sticker-option note-sticker" data-color="default" data-sticker="📌" draggable="true" id="mainNoteSticker">
-                       Sticky Note
+                      📌 Sticky Note
                     </button>
                     <!-- Color choices to apply to the sticker -->
-                    
+                    <div class="color-picker-container note-color-picker">
+                      <button aria-label="Select default note color" aria-pressed="true" class="note-color-option default" data-note-color="default" title="Yellow Default" type="button">
+                      </button>
+                      <button aria-label="Select reminder note color" aria-pressed="false" class="note-color-option reminder" data-note-color="reminder" title="Pink Reminder" type="button">
+                      </button>
+                      <button aria-label="Select idea note color" aria-pressed="false" class="note-color-option idea" data-note-color="idea" title="Green Idea" type="button">
+                      </button>
+                    </div>
                   </div>
                 </div>
-               
-
-                <div class="board-customization panel">
-                  <h4>Customize your board</h4>
-                  <label for="stickerColor">Sticker color</label>
-                  <input id="stickerColor" type="color" value="#f8dce5"/>
-                  <label for="boardColor">Background color</label>
-                  <input id="boardColor" type="color" value="#fffaf2"/>
-                  <div class="sticker-layer-controls">
-                    <button class="secondary-button" id="bringStickerForward" type="button">Bring forward</button>
-                    <button class="secondary-button" id="sendStickerBackward" type="button">Send backward</button>
-                  </div>
-
-                   <div class="mood-upload-tools">
+                <div class="mood-upload-tools">
                   <label for="moodBoardPhotoUpload">
                     📷 Upload your own photo sticker
                   </label>
@@ -171,8 +165,6 @@
                   <p class="library-hint">
                     Upload one or more photos. Drag them around the board just like other stickers.
                   </p>
-                </div>
-
                 </div>
                 <button class="primary-button clear-mood-board-button" id="clearMoodBoard" type="button">
                   Clear board
@@ -198,7 +190,7 @@
                   </div>
                 </div>
                 <p class="board-help">
-                  Tip: Drag stickers to rearrange them. Select a sticker to change its color or layer. Press Delete to remove it. Your board saves to your account.
+                  Tip: Drag stickers to rearrange them. Click a sticker and press Delete to remove it. Your board saves to your account.
                 </p>
               </div>
             </div>
@@ -286,7 +278,7 @@
                     🗓️ This Week's To-Dos
                   </h3>
                   <p class="empty-note">
-                    All calendar events for this week appear here, including Work, School, Home, and your custom folders.
+                    All calendar events for this week appear here, including Work, School, Home, and Other.
                   </p>
                   <div class="selected-date-title" id="workWeekRange">
                   </div>
@@ -351,7 +343,6 @@
         <h2 id="eventModalTitle">
           Add calendar event
         </h2>
-        <p class="modal-hint">This event will be added to the calendar folder you currently have open.</p>
         <label for="eventName">
           Event name
         </label>
@@ -364,6 +355,23 @@
           Time (optional)
         </label>
         <input id="eventTime" type="time"/>
+        <label for="eventCategory">
+          Category
+        </label>
+        <select id="eventCategory">
+          <option value="work">
+            Work
+          </option>
+          <option value="school">
+            School
+          </option>
+          <option value="home">
+            Home
+          </option>
+          <option value="other">
+            Other
+          </option>
+        </select>
         <div class="modal-actions">
           <button class="secondary-button" id="cancelEvent" type="button">
             Cancel
