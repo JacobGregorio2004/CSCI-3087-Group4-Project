@@ -10,6 +10,8 @@
     let customCategories = [];
     let events = [];
     let tasks = [];
+    let editingEventId = null;
+    let boardBackground = "#fffdf8";
 
     let readyToSave = false;
     let saveErrorShown = false;
@@ -38,11 +40,11 @@
     }
     function categoryName(category) {
         return customCategories.find(c => c.key === category)?.name ||
-            ({ work: "Work", school: "School", home: "Home", other: "Other", all: "All", creative: "Creative" }[category] || category);
+            ({ work: "Work", school: "School", home: "Home", all: "All", creative: "Creative" }[category] || category);
     }
     function visibleEvents() {
         return events.filter(e => e.date === selectedDate &&
-            (activeCategory === "all" || activeCategory === "creative" || e.category === activeCategory));
+            (activeCategory === "all" || activeCategory === "creative" || e.category === "all" || e.category === activeCategory));
     }
     function renderCalendar() {
         $("monthHeading").textContent = new Date(viewYear, viewMonth, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
@@ -74,6 +76,8 @@
                     if (sticker.type === "photo") {
                         const img = document.createElement("img");
                         img.className = "calendar-deco-photo";
+                        img.style.width = `${Math.round(25 * Math.min(2, Math.max(0.5, Number(sticker.size) || 1)))}px`;
+                        img.style.height = img.style.width;
                         img.src = sticker.src;
                         img.alt = "Photo sticker";
                         decoWrap.appendChild(img);
@@ -81,6 +85,7 @@
                     else {
                         const deco = document.createElement("span");
                         deco.className = "calendar-deco-emoji";
+                        deco.style.fontSize = `${Math.round(15 * Math.min(2, Math.max(0.5, Number(sticker.size) || 1)))}px`;
                         deco.textContent = sticker.emoji;
                         decoWrap.appendChild(deco);
                     }
@@ -92,7 +97,7 @@
                 }
                 cell.appendChild(decoWrap);
             }
-            const dayEvents = events.filter(e => e.date === iso && (activeCategory === "all" || activeCategory === "creative" || e.category === activeCategory));
+            const dayEvents = events.filter(e => e.date === iso && (activeCategory === "all" || activeCategory === "creative" || e.category === "all" || e.category === activeCategory));
             dayEvents.slice(0, 3).forEach(e => {
                 const chip = document.createElement("span");
                 chip.className = "event-chip " + e.category;
@@ -140,6 +145,11 @@
             const meta = document.createElement("small");
             meta.textContent = (event.time ? event.time + " · " : "") + categoryName(event.category);
             info.appendChild(meta);
+            const edit = document.createElement("button");
+            edit.type = "button";
+            edit.className = "secondary-button";
+            edit.textContent = "Edit";
+            edit.addEventListener("click", () => openEventEditor(event));
             const del = document.createElement("button");
             del.className = "delete-button";
             del.type = "button";
@@ -152,7 +162,7 @@
                 renderCalendar();
                 renderDayDetails();
             });
-            row.append(info, del);
+            row.append(info, edit, del);
             list.appendChild(row);
         });
         renderTasks();
@@ -201,8 +211,8 @@
             const jump = document.createElement("button");
             jump.type = "button";
             jump.className = "secondary-button";
-            jump.textContent = "View";
-            jump.title = "View this event's date";
+            jump.textContent = "Edit";
+            jump.title = "Edit this event";
             jump.addEventListener("click", () => {
                 selectedDate = event.date;
                 const d = fromISODate(event.date);
@@ -210,6 +220,7 @@
                 viewMonth = d.getMonth();
                 renderCalendar();
                 renderDayDetails();
+                openEventEditor(event);
             });
             row.append(label, jump);
             list.appendChild(row);
@@ -218,7 +229,7 @@
     function renderTasks() {
         const list = $("todoList");
         list.innerHTML = "";
-        const shown = tasks.filter(t => activeCategory === "all" || activeCategory === "creative" || t.category === activeCategory);
+        const shown = tasks.filter(t => (!t.date || t.date === selectedDate) && (activeCategory === "all" || activeCategory === "creative" || t.category === "all" || t.category === activeCategory));
         if (!shown.length) {
             const empty = document.createElement("p");
             empty.className = "empty-note";
@@ -243,7 +254,18 @@
             del.title = "Delete task";
             del.setAttribute("aria-label", "Delete task " + task.text);
             del.addEventListener("click", () => { tasks = tasks.filter(t => t.id !== task.id); save(); renderTasks(); });
-            row.append(label, del);
+            const edit = document.createElement("button");
+            edit.type = "button";
+            edit.className = "secondary-button";
+            edit.textContent = "Edit";
+            edit.addEventListener("click", () => {
+                const updated = prompt("Edit task", task.text);
+                if (updated === null) return;
+                if (!updated.trim()) { alert("Task cannot be empty."); return; }
+                task.text = updated.trim().slice(0, 160);
+                save(); renderTasks();
+            });
+            row.append(label, edit, del);
             list.appendChild(row);
         });
     }
@@ -306,28 +328,63 @@
             return;
         }
         stickers.forEach((sticker, index) => {
+            const wrapper = document.createElement("div");
+            wrapper.className = "calendar-sticker-item";
+            const visual = document.createElement(sticker.type === "photo" ? "img" : "span");
+            const size = Math.min(2, Math.max(0.5, Number(sticker.size) || 1));
+            if (sticker.type === "photo") {
+                visual.className = "calendar-deco-photo";
+                visual.src = sticker.src;
+                visual.alt = "Uploaded calendar photo sticker";
+                visual.style.width = `${Math.round(44 * size)}px`;
+                visual.style.height = `${Math.round(44 * size)}px`;
+            } else {
+                visual.className = "calendar-deco-emoji";
+                visual.textContent = sticker.emoji;
+                visual.style.fontSize = `${Math.round(26 * size)}px`;
+            }
+            const label = document.createElement("label");
+            label.className = "calendar-sticker-size-label";
+            label.textContent = "Size";
+            const slider = document.createElement("input");
+            slider.type = "range";
+            slider.min = "50";
+            slider.max = "200";
+            slider.step = "10";
+            slider.value = String(Math.round(size * 100));
+            slider.setAttribute("aria-label", `Resize calendar sticker ${index + 1}`);
+            slider.addEventListener("input", () => {
+                sticker.size = Number(slider.value) / 100;
+                if (sticker.type === "photo") {
+                    visual.style.width = `${Math.round(44 * sticker.size)}px`;
+                    visual.style.height = visual.style.width;
+                } else {
+                    visual.style.fontSize = `${Math.round(26 * sticker.size)}px`;
+                }
+                // Save only on change, so dragging the slider does not flood the API.
+            });
+            slider.addEventListener("change", () => {
+                saveCalendarDecorations();
+                renderCalendar();
+            });
+            label.appendChild(slider);
             const remove = document.createElement("button");
             remove.type = "button";
-            remove.title = "Click to remove this sticker";
-            remove.setAttribute("aria-label", "Remove sticker from " + prettyDate(selectedDate));
-            if (sticker.type === "photo") {
-                const img = document.createElement("img");
-                img.className = "calendar-deco-photo";
-                img.src = sticker.src;
-                img.alt = "Uploaded photo sticker. Click to remove";
-                remove.appendChild(img);
-            }
-            else {
-                remove.className = "calendar-deco-emoji";
-                remove.textContent = sticker.emoji;
-            }
+            remove.className = "calendar-sticker-remove";
+            remove.textContent = "Remove";
+            remove.setAttribute("aria-label", `Remove calendar sticker ${index + 1}`);
             remove.addEventListener("click", () => {
                 calendarDecorations[selectedDate].splice(index, 1);
-                if (!calendarDecorations[selectedDate].length)
-                delete calendarDecorations[selectedDate]; saveCalendarDecorations(); renderCalendar(); renderCalendarStickerPreview(); });
-            preview.appendChild(remove);
+                if (!calendarDecorations[selectedDate].length) delete calendarDecorations[selectedDate];
+                saveCalendarDecorations();
+                renderCalendar();
+                renderCalendarStickerPreview();
+            });
+            wrapper.append(visual, label, remove);
+            preview.appendChild(wrapper);
         });
     }
+
     function addCalendarEmoji(emoji) {
         if (!calendarDecorations[selectedDate])
             calendarDecorations[selectedDate] = [];
@@ -382,9 +439,20 @@
         }
     });
     renderCalendarStickerPreview();
+    function openEventEditor(event) {
+        editingEventId = event.id;
+        $("eventModalTitle").textContent = "Edit calendar event";
+        $("eventName").value = event.title;
+        $("eventDate").value = event.date;
+        $("eventTime").value = event.time || "";
+        $("eventModal").classList.add("open");
+        $("eventName").focus();
+    }
     $("addEventBtn").addEventListener("click", () => {
+        editingEventId = null;
+        $("eventModalTitle").textContent = "Add calendar event";
+        $("eventForm").reset();
         $("eventDate").value = selectedDate;
-        $("eventCategory").value = ["work", "school", "home", "other"].includes(activeCategory) ? activeCategory : "school";
         $("eventModal").classList.add("open");
         $("eventName").focus();
     });
@@ -395,10 +463,17 @@
         const date = $("eventDate").value;
         if (!title || !date)
             return;
-        events.push({
-            id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()), title, date, time: $("eventTime").value,
-            category: $("eventCategory").value
-        });
+        if (editingEventId) {
+            const existing = events.find(item => item.id === editingEventId);
+            if (existing) Object.assign(existing, { title, date, time: $("eventTime").value });
+        } else {
+            events.push({
+                id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+                title, date, time: $("eventTime").value,
+                category: activeCategory === "creative" ? "all" : activeCategory
+            });
+        }
+        editingEventId = null;
         selectedDate = date;
         const d = fromISODate(date);
         viewYear = d.getFullYear();
@@ -416,16 +491,53 @@
         const text = input.value.trim();
         if (!text)
             return;
-        const category = ["work", "school", "home", "other"].includes(activeCategory) ? activeCategory : "school";
-        tasks.push({ id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()), text, category, done: false });
+        const category = activeCategory === "creative" ? "all" : activeCategory;
+        tasks.push({ id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()), text, category, date: selectedDate, done: false });
         input.value = "";
         save();
         renderTasks();
     });
-    $("addFolderBtn").addEventListener("click", () => { $("folderModal").classList.add("open"); $("folderName").focus(); });
+    const MAX_CALENDARS = 10;
+    function addCustomTab(category) {
+        const wrapper = document.createElement("span");
+        wrapper.className = "custom-tab-wrap";
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "tab";
+        button.dataset.category = category.key;
+        button.textContent = "📁 " + category.name;
+        const remove = document.createElement("button");
+        remove.type = "button";
+        remove.className = "remove-calendar";
+        remove.textContent = "×";
+        remove.setAttribute("aria-label", "Delete " + category.name + " calendar");
+        remove.addEventListener("click", () => {
+            if (!confirm(`Delete ${category.name} calendar and all its events and tasks? This cannot be undone.`)) return;
+            customCategories = customCategories.filter(item => item.key !== category.key);
+            events = events.filter(item => item.category !== category.key);
+            tasks = tasks.filter(item => item.category !== category.key);
+            wrapper.remove();
+            save();
+            if (activeCategory === category.key) activateCategory("all", document.querySelector('[data-category="all"]'));
+            else { renderCalendar(); renderDayDetails(); }
+        });
+        wrapper.append(button, remove);
+        $("tabs").insertBefore(wrapper, $("addFolderBtn"));
+        return button;
+    }
+    $("addFolderBtn").addEventListener("click", () => {
+        if (customCategories.length + 3 >= MAX_CALENDARS) {
+            alert("You can have up to 10 calendars (including Work, School, and Home).");
+            return;
+        }
+        $("folderModal").classList.add("open"); $("folderName").focus();
+    });
     $("cancelFolder").addEventListener("click", () => $("folderModal").classList.remove("open"));
     $("folderForm").addEventListener("submit", e => {
         e.preventDefault();
+        if (customCategories.length + 3 >= MAX_CALENDARS) {
+            alert("You can have up to 10 calendars."); return;
+        }
         const name = $("folderName").value.trim();
         if (!name)
             return;
@@ -436,11 +548,7 @@
         const key = "custom_" + Date.now();
         customCategories.push({ key, name });
         save();
-        const button = document.createElement("button");
-        button.className = "tab";
-        button.dataset.category = key;
-        button.textContent = "📁 " + name;
-        $("tabs").insertBefore(button, $("addFolderBtn"));
+        const button = addCustomTab({key, name});
         $("folderName").value = "";
         $("folderModal").classList.remove("open");
         activateCategory(key, button);
@@ -455,6 +563,9 @@
     let selectedStickerId = null;
     const board = $("moodBoard");
     let boardSaveTimer = null;
+    function saveBoardBackground() {
+        if (readyToSave) MyPlannerAPI.saveSection("boardSettings", { background: boardBackground }).catch(reportSaveError);
+    }
     function boardSave() {
         if (!readyToSave) return;
         // Debounce typing in notes so each keystroke does not cause a database write.
@@ -472,10 +583,13 @@
             item.dataset.id = sticker.id;
             item.style.left = `${Math.max(0, Math.min(94, sticker.x))}%`;
             item.style.top = `${Math.max(0, Math.min(90, sticker.y))}%`;
+            item.style.zIndex = String(Math.max(1, Number(sticker.layer) || 1));
+            if (sticker.size) { item.style.width = sticker.size + "px"; item.style.height = sticker.size + "px"; item.style.fontSize = Math.round(sticker.size * .55) + "px"; }
+            if (sticker.color && sticker.type !== "photo") item.style.backgroundColor = sticker.color;
             item.tabIndex = 0;
             item.setAttribute("aria-label", sticker.type === "note" ? "Editable mood board note" : "Mood board sticker");
             if (sticker.type === "note") {
-                item.textContent = sticker.emoji + " ";
+                item.textContent = "";
                 const note = document.createElement("textarea");
                 note.value = sticker.text || "Write here...";
                 note.setAttribute("aria-label", "Sticker note text");
@@ -527,25 +641,54 @@
             board.appendChild(item);
         });
     }
-    let selectedNoteColor = "default";
-    document.querySelectorAll("[data-note-color]").forEach(button => {
-        button.addEventListener("click", () => {
-            selectedNoteColor = button.dataset.noteColor;
-            document.querySelectorAll("[data-note-color]").forEach(option => {
-                option.setAttribute("aria-pressed", String(option === button));
-            });
-        });
+    function selectedSticker() { return boardStickers.find(s => s.id === selectedStickerId); }
+    $("boardBackground").addEventListener("input", e => {
+        boardBackground = e.target.value;
+        board.style.backgroundColor = boardBackground;
+        saveBoardBackground();
+    });
+    $("stickerColor").addEventListener("input", e => {
+        const sticker = selectedSticker();
+        if (!sticker || sticker.type === "photo") return;
+        sticker.color = e.target.value; boardRender(); boardSave();
+    });
+    $("stickerSize").addEventListener("input", e => {
+        const sticker = selectedSticker(); if (!sticker) return;
+        sticker.size = Number(e.target.value); boardRender(); boardSave();
+    });
+    // Keep every sticker at a positive, unique layer. Move only one position
+    // at a time so Forward and Backward behave consistently for every type.
+    function moveStickerLayer(stickers, selectedId, direction) {
+        const ordered = [...stickers].sort((a, b) =>
+            (Number(a.layer) || 0) - (Number(b.layer) || 0) ||
+            stickers.indexOf(a) - stickers.indexOf(b));
+        const index = ordered.findIndex(sticker => sticker.id === selectedId);
+        if (index < 0) return false;
+        const next = index + direction;
+        if (next < 0 || next >= ordered.length) return false;
+        [ordered[index], ordered[next]] = [ordered[next], ordered[index]];
+        ordered.forEach((sticker, position) => { sticker.layer = position + 1; });
+        return true;
+    }
+    $("bringForward").addEventListener("click", () => {
+        if (moveStickerLayer(boardStickers, selectedStickerId, 1)) {
+            boardRender(); boardSave();
+        }
+    });
+    $("sendBackward").addEventListener("click", () => {
+        if (moveStickerLayer(boardStickers, selectedStickerId, -1)) {
+            boardRender(); boardSave();
+        }
     });
     function addBoardSticker(emoji, type = "emoji") {
         const rect = board.getBoundingClientRect();
         const count = boardStickers.length;
         const sticker = {
-            id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()), emoji, type, x: Math.min(78, 8 + (count % 5) * 13),
+            id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()), emoji: type === "note" ? "" : emoji, type, color: $("stickerColor").value, size: type === "note" ? 116 : 65, layer: boardStickers.length + 1, x: Math.min(78, 8 + (count % 5) * 13),
             y: Math.min(78, 8 + (count % 6) * 12)
         };
         if (type === "note") {
             sticker.text = "Write here...";
-            sticker.noteType = selectedNoteColor === "default" ? "" : selectedNoteColor;
         }
         boardStickers.push(sticker);
         selectedStickerId = sticker.id;
@@ -612,7 +755,7 @@
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                     resolve({
                         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()), type: "photo", src: canvas.toDataURL("image/jpeg",
-                        0.8), name: file.name, x: Math.min(78, 8 + (boardStickers.length % 5) * 13), y: Math.min(78, 8 + (boardStickers.length % 6) * 12)
+                        0.8), name: file.name, size: 100, layer: boardStickers.length + 1, x: Math.min(78, 8 + (boardStickers.length % 5) * 13), y: Math.min(78, 8 + (boardStickers.length % 6) * 12)
                     });
                 };
                 img.src = reader.result;
@@ -649,19 +792,17 @@
         try {
             const user = await MyPlannerAPI.requireSession();
             $("currentUserName").textContent = user.name;
+            $("userGreeting").textContent = "Hey, " + user.name + "!";
             const state = await MyPlannerAPI.getState();
             events = Array.isArray(state.events) ? state.events : [];
             tasks = Array.isArray(state.tasks) ? state.tasks : [];
             customCategories = Array.isArray(state.customCategories) ? state.customCategories : [];
             boardStickers = Array.isArray(state.boardStickers) ? state.boardStickers : [];
+            boardBackground = /^#[0-9a-f]{6}$/i.test(state.boardSettings?.background || "") ? state.boardSettings.background : "#fffdf8";
+            $("boardBackground").value = boardBackground;
+            board.style.backgroundColor = boardBackground;
             calendarDecorations = state.calendarDecorations && !Array.isArray(state.calendarDecorations) ? state.calendarDecorations : {};
-            customCategories.forEach(category => {
-                const button = document.createElement("button");
-                button.className = "tab";
-                button.dataset.category = category.key;
-                button.textContent = "📁 " + category.name;
-                $("tabs").insertBefore(button, $("addFolderBtn"));
-            });
+            customCategories.forEach(addCustomTab);
             readyToSave = true;
             boardRender();
             renderCalendar();
