@@ -909,39 +909,6 @@ button {
   margin-bottom: 15px;
 }
 
-.note-color-picker {
-  margin-top: 10px;
-  display: flex;
-  gap: 8px;
-}
-
-.note-color-option {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  cursor: pointer;
-}
-
-.note-color-option.default {
-  background: #fff09b;
-  border: 1px solid #e2cf6d;
-}
-
-.note-color-option.reminder {
-  background: #f6d7e2;
-  border: 1px solid #e8b8ca;
-}
-
-.note-color-option.idea {
-  background: #cfe8d6;
-  border: 1px solid #b0d2b9;
-}
-
-.note-color-option[aria-pressed="true"] {
-  outline: 2px solid var(--brown);
-  outline-offset: 2px;
-}
-
 .clear-mood-board-button {
   width: 100%;
   margin-top: 14px;
@@ -963,3 +930,19 @@ button {
 .user-name { display: flex; gap: 10px; align-items: center; }
 #logoutButton { padding: 4px 10px; border: 1px solid var(--brown); border-radius: 7px;
   background: var(--pink); font-size: 13px; font-weight: bold; cursor: pointer; }
+/* MyPlanner+ calendar management and mood-board controls */
+.custom-tab-wrap {display:inline-flex;align-items:center;position:relative}
+.custom-tab-wrap .remove-calendar {align-self:center;border:1px solid #8b3434;background:#fff4f4;color:#8b3434;border-radius:50%;width:23px;height:23px;margin-left:-8px;z-index:2;font-weight:bold}
+.board-customize {display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px;padding:12px}
+.board-customize label {font-size:13px;font-weight:bold}
+.board-customize input[type=color] {width:45px;height:32px;cursor:pointer}
+.board-customize button {border:1px solid var(--brown);border-radius:7px;padding:7px;background:var(--green)}
+.board-sticker.note {background-image:none!important}
+.board-sticker.note textarea {height:100%;min-height:60px}
+
+/* Calendar date sticker resizing controls */
+.calendar-sticker-item { display: flex; flex-direction: column; align-items: center; gap: 7px; padding: 10px; border: 1px solid #e5d8c9; border-radius: 10px; background: #fffdf8; min-width: 112px; }
+.calendar-sticker-item .calendar-deco-photo { object-fit: cover; max-width: none; }
+.calendar-sticker-size-label { display: flex; flex-direction: column; gap: 3px; align-items: center; font-size: 12px; font-weight: bold; }
+.calendar-sticker-size-label input { width: 95px; accent-color: var(--pink-dark); }
+.calendar-sticker-preview .calendar-sticker-remove { border: 1px solid #c7bcb0; border-radius: 7px; padding: 5px 9px; background: #f2d8df; font-size: 12px; cursor: pointer; }
