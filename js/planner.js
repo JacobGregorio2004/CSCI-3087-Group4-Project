@@ -1,21 +1,26 @@
 (() => {
+    // Shortcut: $("elementId") finds an HTML element by its unique id. This is the same as document.getElementById("elementId").
     const $ = id => document.getElementById(id);
 
+    // STATE: These variables remember which month, date, and calendar tab the user is viewing. const means the variable cannot be reassigned; let means it can change.
     const today = new Date();
     let viewYear = today.getFullYear();
     let viewMonth = today.getMonth();
     let selectedDate = toISODate(today);
     let activeCategory = "creative";
 
+    // DATA: Arrays ([]) hold the user-created calendars, calendar events, and to-do tasks. Each entry is an object containing properties such as id, title, and date.
     let customCategories = [];
     let events = [];
     let tasks = [];
     let editingEventId = null;
     let boardBackground = "#fffdf8";
 
+    // DATABASE SAFETY: Do not save until the existing account data has finished loading. The error flag prevents repeated alerts.
     let readyToSave = false;
     let saveErrorShown = false;
     
+    // Show a database error in the developer console and alert the user once.
     function reportSaveError(error) {
         console.error("Could not save MyPlanner+ data:", error);
         if (!saveErrorShown) {
@@ -23,29 +28,36 @@
             alert("Your changes could not be saved to the database. " + error.message);
         }
     }
+    // Save events, tasks, and custom calendar categories to the "planner" section of the database. .catch(...) handles a failed asynchronous save.
     function save() {
         if (!readyToSave) return;
         MyPlannerAPI.saveSection("planner", { events, tasks, customCategories })
             .catch(reportSaveError);
     }
+    // Convert a JavaScript Date to YYYY-MM-DD (for example 2026-11-16). padStart adds leading zeros to single-digit months and days.
     function toISODate(date) {
         return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
     }
+    // Convert a YYYY-MM-DD string back to a JavaScript Date. Months start at 0 in JavaScript; noon helps avoid date/timezone edge cases.
     function fromISODate(value) {
         const [y, m, d] = value.split("-").map(Number);
         return new Date(y, m - 1, d, 12);
     }
+    // Turn a stored date into a readable date such as Monday, November 16, 2026.
     function prettyDate(value) {
         return fromISODate(value).toLocaleDateString(undefined, { weekday: "long", month: "long", day: "numeric", year: "numeric" });
     }
+    // Find the displayed calendar name: check custom calendars first, then the built-in calendar names.
     function categoryName(category) {
         return customCategories.find(c => c.key === category)?.name ||
             ({ work: "Work", school: "School", home: "Home", all: "All", creative: "Creative" }[category] || category);
     }
+    // Return only events on the selected date that belong to the current tab (or should be visible across tabs). filter() creates a matching subset.
     function visibleEvents() {
         return events.filter(e => e.date === selectedDate &&
             (activeCategory === "all" || activeCategory === "creative" || e.category === "all" || e.category === activeCategory));
     }
+    // CALENDAR DISPLAY: Rebuild the monthly calendar in HTML. "render" means updating what the user sees, not saving data.
     function renderCalendar() {
         $("monthHeading").textContent = new Date(viewYear, viewMonth, 1).toLocaleDateString(undefined, { month: "long", year: "numeric" });
         const grid = $("calendarGrid");
@@ -54,10 +66,12 @@
         const mondayOffset = (first.getDay() + 6) % 7;
         const start = new Date(viewYear, viewMonth, 1 - mondayOffset);
         const todayISO = toISODate(new Date());
+        // A six-week calendar grid has 42 cells (6 rows × 7 days).
         for (let i = 0; i < 42; i++) {
             const date = new Date(start);
             date.setDate(start.getDate() + i);
             const iso = toISODate(date);
+            // createElement makes a new HTML element; appendChild inserts it into the page.
             const cell = document.createElement("div");
             cell.className = "day" + (date.getMonth() !== viewMonth ? " outside" : "") + (iso === todayISO ? " today" : "");
             cell.tabIndex = 0;
@@ -97,6 +111,7 @@
                 }
                 cell.appendChild(decoWrap);
             }
+            // Display up to three event labels inside each calendar day cell.
             const dayEvents = events.filter(e => e.date === iso && (activeCategory === "all" || activeCategory === "creative" || e.category === "all" || e.category === activeCategory));
             dayEvents.slice(0, 3).forEach(e => {
                 const chip = document.createElement("span");
@@ -109,6 +124,7 @@
                 more.textContent = `+${dayEvents.length - 3} more`;
                 cell.appendChild(more);
             }
+            // A shared function supports both mouse clicks and Enter/Space keyboard selection.
             const selectDay = () => { selectedDate = iso; if (date.getMonth() !== viewMonth) {
                 viewMonth = date.getMonth();
                 viewYear = date.getFullYear();
@@ -124,6 +140,7 @@
             grid.appendChild(cell);
         }
     }
+    // SELECTED-DAY EVENTS: Display the events for the chosen date, with Edit and Delete buttons.
     function renderDayDetails() {
         $("selectedDateTitle").textContent = prettyDate(selectedDate);
         const list = $("eventList");
@@ -168,6 +185,7 @@
         renderTasks();
         renderWorkWeekTasks();
     }
+    // Find the Monday and Sunday surrounding a selected date, for the weekly list.
     function getWeekRange(dateISO) {
         const date = fromISODate(dateISO);
         const mondayOffset = (date.getDay() + 6) % 7;
@@ -177,6 +195,7 @@
         sunday.setDate(monday.getDate() + 6);
         return { monday, sunday, start: toISODate(monday), end: toISODate(sunday) };
     }
+    // WEEKLY EVENT CHECKLIST: Show events for the entire Monday-Sunday week, sorted by date/time, with completion checkboxes and Edit buttons.
     function renderWorkWeekTasks() {
         const range = getWeekRange(selectedDate);
         const fmt = d => d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
@@ -197,6 +216,7 @@
             const row = document.createElement("div");
             row.className = "todo-item" + (event.weekTaskDone ? " done" : "");
             const label = document.createElement("label");
+            // A checkbox changes the stored completed state when the user clicks it.
             const check = document.createElement("input");
             check.type = "checkbox";
             check.checked = !!event.weekTaskDone;
@@ -226,6 +246,7 @@
             list.appendChild(row);
         });
     }
+    // TO-DO LIST: Show tasks matching the selected date and calendar. Users can check off, edit, or delete tasks.
     function renderTasks() {
         const list = $("todoList");
         list.innerHTML = "";
@@ -240,6 +261,7 @@
             const row = document.createElement("div");
             row.className = "todo-item" + (task.done ? " done" : "");
             const label = document.createElement("label");
+            // A checkbox changes the stored completed state when the user clicks it.
             const check = document.createElement("input");
             check.type = "checkbox";
             check.checked = task.done;
@@ -269,6 +291,7 @@
             list.appendChild(row);
         });
     }
+    // TAB NAVIGATION: Change the active calendar and switch between the calendar view and Creative Mood Board view.
     function activateCategory(category, button) {
         activeCategory = category;
         document.querySelectorAll(".tab").forEach(tab => tab.classList.toggle("active", tab === button));
@@ -280,19 +303,23 @@
             renderDayDetails();
         }
     }
+    // EVENT LISTENER: When a calendar tab is clicked, read its data-category HTML attribute and activate that tab. Event delegation also supports newly created tabs.
     $("tabs").addEventListener("click", e => {
         const button = e.target.closest("button.tab[data-category]");
         if (button)
             activateCategory(button.dataset.category, button);
     });
+    // MONTH BUTTONS: Move to the previous month, adjusting the year if needed.
     $("prevMonth").addEventListener("click", () => { viewMonth--; if (viewMonth < 0) {
         viewMonth = 11;
         viewYear--;
     } renderCalendar(); });
+    // Move to the next month, adjusting the year if needed.
     $("nextMonth").addEventListener("click", () => { viewMonth++; if (viewMonth > 11) {
         viewMonth = 0;
         viewYear++;
     } renderCalendar(); });
+    // TODAY BUTTON: Return the calendar to today and refresh the selected-day information.
     $("todayBtn").addEventListener("click", () => {
         const now = new Date();
         viewYear = now.getFullYear();
@@ -302,6 +329,7 @@
         renderDayDetails();
         renderCalendarStickerPreview();
     });
+    // SHOW/HIDE DETAILS: Toggle the hidden CSS class; aria-expanded tells assistive technology whether the panel is open.
     $("toggleCalendarDetails").addEventListener("click", () => {
         const details = $("calendarDetails");
         const opening = details.classList.contains("hidden");
@@ -309,12 +337,15 @@
         $("toggleCalendarDetails").setAttribute("aria-expanded", String(opening));
         $("toggleCalendarDetails").textContent = opening ? "✏️ Hide planner details" : "✏️ Show planner details";
     });
+    // CALENDAR STICKERS: This object groups emoji/photo stickers by date, such as calendarDecorations["2026-11-16"].
     let calendarDecorations = {};
+    // Save the calendar-day sticker data separately from the main events and tasks.
     function saveCalendarDecorations() {
         if (!readyToSave) return;
         MyPlannerAPI.saveSection("calendarDecorations", calendarDecorations)
             .catch(reportSaveError);
     }
+    // STICKER PREVIEW: Display the selected day’s stickers, size sliders, and Remove buttons.
     function renderCalendarStickerPreview() {
         const preview = $("calendarStickerPreview");
         preview.innerHTML = "";
@@ -346,6 +377,7 @@
             const label = document.createElement("label");
             label.className = "calendar-sticker-size-label";
             label.textContent = "Size";
+            // A range input lets the user resize a sticker between 50% and 200%.
             const slider = document.createElement("input");
             slider.type = "range";
             slider.min = "50";
@@ -385,6 +417,7 @@
         });
     }
 
+    // Add an emoji sticker to the selected calendar date, save it, and redraw the calendar and preview.
     function addCalendarEmoji(emoji) {
         if (!calendarDecorations[selectedDate])
             calendarDecorations[selectedDate] = [];
@@ -393,7 +426,9 @@
         renderCalendar();
         renderCalendarStickerPreview();
     }
+    // Connect every HTML button with data-calendar-sticker to the addCalendarEmoji function. querySelectorAll finds all matching elements.
     document.querySelectorAll("[data-calendar-sticker]").forEach(button => button.addEventListener("click", () => addCalendarEmoji(button.dataset.calendarSticker)));
+    // PHOTO STICKER UPLOAD: Validate an image, read it, resize it using an off-screen canvas, and save it to the selected date.
     $("calendarStickerUpload").addEventListener("change", e => {
         const file = e.target.files && e.target.files[0];
         if (!file)
@@ -428,6 +463,7 @@
         };
         reader.readAsDataURL(file);
     });
+    // CLEAR DAY STICKERS: Ask for confirmation before deleting all stickers on the selected date.
     $("clearCalendarStickers").addEventListener("click", () => {
         if (!calendarDecorations[selectedDate] || !calendarDecorations[selectedDate].length)
             return;
@@ -439,6 +475,7 @@
         }
     });
     renderCalendarStickerPreview();
+    // EVENT EDITOR: Fill the modal dialog with an existing event’s information so the user can update it.
     function openEventEditor(event) {
         editingEventId = event.id;
         $("eventModalTitle").textContent = "Edit calendar event";
@@ -448,6 +485,7 @@
         $("eventModal").classList.add("open");
         $("eventName").focus();
     }
+    // ADD EVENT: Open a blank event form, defaulting its date to the selected calendar day.
     $("addEventBtn").addEventListener("click", () => {
         editingEventId = null;
         $("eventModalTitle").textContent = "Add calendar event";
@@ -456,7 +494,9 @@
         $("eventModal").classList.add("open");
         $("eventName").focus();
     });
+    // CANCEL EVENT: Close the event popup without submitting changes.
     $("cancelEvent").addEventListener("click", () => $("eventModal").classList.remove("open"));
+    // SAVE EVENT: preventDefault stops the browser from reloading. Update an existing event or create a new event with a unique id.
     $("eventForm").addEventListener("submit", e => {
         e.preventDefault();
         const title = $("eventName").value.trim();
@@ -485,6 +525,7 @@
         renderDayDetails();
         renderCalendarStickerPreview();
     });
+    // ADD TO-DO: Read the task text, create a new unchecked task, save it, and refresh the task list.
     $("todoForm").addEventListener("submit", e => {
         e.preventDefault();
         const input = $("todoInput");
@@ -497,7 +538,9 @@
         save();
         renderTasks();
     });
+    // CUSTOM CALENDARS: At most 10 Work/School/Home plus user-created calendars; All and Creative are excluded from this count.
     const MAX_CALENDARS = 10;
+    // Build a new custom calendar tab in HTML, including its delete (×) button and confirmation dialog.
     function addCustomTab(category) {
         const wrapper = document.createElement("span");
         wrapper.className = "custom-tab-wrap";
@@ -525,6 +568,7 @@
         $("tabs").insertBefore(wrapper, $("addFolderBtn"));
         return button;
     }
+    // ADD CALENDAR BUTTON: Enforce the 10-calendar limit before opening the name-entry popup.
     $("addFolderBtn").addEventListener("click", () => {
         if (customCategories.length + 3 >= MAX_CALENDARS) {
             alert("You can have up to 10 calendars (including Work, School, and Home).");
@@ -532,7 +576,9 @@
         }
         $("folderModal").classList.add("open"); $("folderName").focus();
     });
+    // CANCEL FOLDER: Close the new-calendar popup.
     $("cancelFolder").addEventListener("click", () => $("folderModal").classList.remove("open"));
+    // CREATE CALENDAR: Check the limit/name, assign a custom key, save it, and switch to the new tab.
     $("folderForm").addEventListener("submit", e => {
         e.preventDefault();
         if (customCategories.length + 3 >= MAX_CALENDARS) {
@@ -553,19 +599,25 @@
         $("folderModal").classList.remove("open");
         activateCategory(key, button);
     });
+    // MODAL SHORTCUTS: Clicking the dark area outside either popup closes it.
     ["eventModal", "folderModal"].forEach(id => $(id).addEventListener("click", e => { if (e.target.id === id)
         $(id).classList.remove("open"); }));
+    // ESCAPE SHORTCUT: Press Escape to close any open modal.
     document.addEventListener("keydown", e => { if (e.key === "Escape")
         document.querySelectorAll(".modal.open").forEach(m => m.classList.remove("open")); });
     // Mood board sticker state and drag/drop interactions.
+    // MOOD BOARD STATE: Stickers are stored as objects. draggedSticker tracks drag/drop; selectedStickerId tracks the currently selected sticker.
     let boardStickers = [];
     let draggedSticker = null;
     let selectedStickerId = null;
+    // HTML CONNECTION: The id="moodBoard" div is the board container. CSS .mood-board styles it; JavaScript adds movable .board-sticker elements inside it.
     const board = $("moodBoard");
     let boardSaveTimer = null;
+    // Save the selected mood-board background color to the boardSettings database section.
     function saveBoardBackground() {
         if (readyToSave) MyPlannerAPI.saveSection("boardSettings", { background: boardBackground }).catch(reportSaveError);
     }
+    // Save the mood-board stickers after a 300 ms delay (debouncing) to reduce database requests during typing or dragging.
     function boardSave() {
         if (!readyToSave) return;
         // Debounce typing in notes so each keystroke does not cause a database write.
@@ -574,6 +626,7 @@
             MyPlannerAPI.saveSection("board", boardStickers).catch(reportSaveError);
         }, 300);
     }
+    // DRAW MOOD BOARD: Remove old sticker elements and recreate them from boardStickers. Show id="boardEmpty" only when there are no stickers.
     function boardRender() {
         board.querySelectorAll(".board-sticker").forEach(el => el.remove());
         $("boardEmpty").style.display = boardStickers.length ? "none" : "flex";
@@ -615,15 +668,19 @@
                 selectedStickerId = sticker.id;
                 boardRender();
                 const active = board.querySelector(`[data-id="${sticker.id}"]`);
+                // The board’s screen dimensions convert pointer movement into percentage positions.
                 const rect = board.getBoundingClientRect();
                 const startX = e.clientX, startY = e.clientY, origX = sticker.x, origY = sticker.y;
+                // Pointer capture helps keep tracking the drag even when the pointer moves.
                 active.setPointerCapture?.(e.pointerId);
+                // Move the sticker visually as the pointer moves; keep it inside board limits.
                 const move = ev => {
                     sticker.x = Math.max(0, Math.min(94, origX + (ev.clientX - startX) / rect.width * 100));
                     sticker.y = Math.max(0, Math.min(90, origY + (ev.clientY - startY) / rect.height * 100));
                     active.style.left = sticker.x + "%";
                     active.style.top = sticker.y + "%";
                 };
+                // When dragging ends, remove temporary listeners and save the final position.
                 const up = () => {
                     active.removeEventListener("pointermove", move);
                     active.removeEventListener("pointerup", up);
@@ -641,23 +698,28 @@
             board.appendChild(item);
         });
     }
+    // Look up the currently selected sticker object using its unique id.
     function selectedSticker() { return boardStickers.find(s => s.id === selectedStickerId); }
+    // BACKGROUND COLOR PICKER: Update the board color immediately and save the setting.
     $("boardBackground").addEventListener("input", e => {
         boardBackground = e.target.value;
         board.style.backgroundColor = boardBackground;
         saveBoardBackground();
     });
+    // STICKER COLOR PICKER: Recolor the selected emoji/note (photos are excluded).
     $("stickerColor").addEventListener("input", e => {
         const sticker = selectedSticker();
         if (!sticker || sticker.type === "photo") return;
         sticker.color = e.target.value; boardRender(); boardSave();
     });
+    // STICKER SIZE SLIDER: Resize the selected mood-board sticker and save it.
     $("stickerSize").addEventListener("input", e => {
         const sticker = selectedSticker(); if (!sticker) return;
         sticker.size = Number(e.target.value); boardRender(); boardSave();
     });
     // Keep every sticker at a positive, unique layer. Move only one position
     // at a time so Forward and Backward behave consistently for every type.
+    // LAYER ORDER: Sort stickers by layer, swap the selected sticker one position forward/backward, and renumber the layers. Higher layers appear on top.
     function moveStickerLayer(stickers, selectedId, direction) {
         const ordered = [...stickers].sort((a, b) =>
             (Number(a.layer) || 0) - (Number(b.layer) || 0) ||
@@ -670,16 +732,19 @@
         ordered.forEach((sticker, position) => { sticker.layer = position + 1; });
         return true;
     }
+    // BRING FORWARD: Move the selected sticker one layer closer to the front.
     $("bringForward").addEventListener("click", () => {
         if (moveStickerLayer(boardStickers, selectedStickerId, 1)) {
             boardRender(); boardSave();
         }
     });
+    // SEND BACKWARD: Move the selected sticker one layer toward the back.
     $("sendBackward").addEventListener("click", () => {
         if (moveStickerLayer(boardStickers, selectedStickerId, -1)) {
             boardRender(); boardSave();
         }
     });
+    // CREATE MOOD BOARD STICKER: Give a new emoji/note a unique id, default size/color/layer, and starting position.
     function addBoardSticker(emoji, type = "emoji") {
         const rect = board.getBoundingClientRect();
         const count = boardStickers.length;
@@ -700,6 +765,7 @@
             note?.select();
         }
     }
+    // STICKER TOOLBAR: Clicking adds a sticker; dragging prepares its data to be dropped on the board.
     document.querySelectorAll(".sticker-option").forEach(button => {
         button.addEventListener("click", () => addBoardSticker(button.dataset.sticker, button.classList.contains("note-sticker") ? "note" : "emoji"));
         button.addEventListener("dragstart", e => {
@@ -710,8 +776,10 @@
             }
         });
     });
+    // ALLOW DROP: preventDefault enables dropping onto the mood board.
     board.addEventListener("dragover", e => { e.preventDefault(); if (e.dataTransfer)
         e.dataTransfer.dropEffect = "copy"; });
+    // DROP STICKER: Read the dragged sticker data, calculate the drop position, create the sticker, and save its new coordinates.
     board.addEventListener("drop", e => {
         e.preventDefault();
         let data = draggedSticker;
@@ -732,6 +800,7 @@
         boardRender();
         draggedSticker = null;
     });
+    // MOOD BOARD PHOTO UPLOAD: Validate each selected image, shrink it on a canvas, then add the photos as movable board stickers.
     $("moodBoardPhotoUpload").addEventListener("change", e => {
         const files = Array.from(e.target.files || []);
         if (!files.length)
@@ -770,6 +839,7 @@
         }).catch(err => alert(err.message + " Please try another photo."))
             .finally(() => { e.target.value = ""; });
     });
+    // CLEAR MOOD BOARD: Confirm before removing all stickers and notes.
     $("clearMoodBoard").addEventListener("click", () => {
         if (!boardStickers.length)
             return;
@@ -780,6 +850,7 @@
             boardRender();
         }
     });
+    // DELETE SHORTCUT: Delete the selected board sticker with Delete/Backspace, except while typing in an input or textarea.
     document.addEventListener("keydown", e => {
         if ((e.key === "Delete" || e.key === "Backspace") && selectedStickerId && !["INPUT", "TEXTAREA"].includes(document.activeElement.tagName)) {
             boardStickers = boardStickers.filter(s => s.id !== selectedStickerId);
@@ -788,11 +859,13 @@
             boardRender();
         }
     });
+    // INITIAL LOAD: Verify the user session, retrieve saved data from the database, restore tabs/stickers/colors, then draw the interface. await waits for each Promise.
     async function initializePlanner() {
         try {
             const user = await MyPlannerAPI.requireSession();
             $("currentUserName").textContent = user.name;
             $("userGreeting").textContent = "Hey, " + user.name + "!";
+            // The API returns the current user’s saved planner data; fall back to empty arrays if missing.
             const state = await MyPlannerAPI.getState();
             events = Array.isArray(state.events) ? state.events : [];
             tasks = Array.isArray(state.tasks) ? state.tasks : [];
@@ -815,6 +888,7 @@
             }
         }
     }
+    // SAFE EXIT: Finish pending mood-board and database saves before logging out or navigating to Finance.
     async function leavePlanner(destination) {
         clearTimeout(boardSaveTimer);
         if (readyToSave) {
@@ -827,12 +901,15 @@
             window.location.href = destination;
         }
     }
+    // FINANCE LINK: Save pending changes before opening finance.html.
     document.querySelector('a.tab[href="finance.html"]').addEventListener("click", event => {
         event.preventDefault();
         leavePlanner("finance.html").catch(reportSaveError);
     });
+    // LOGOUT BUTTON: Save pending changes before ending the user session.
     $("logoutButton").addEventListener("click", () => {
         leavePlanner("logout").catch(reportSaveError);
     });
+    // START APPLICATION: Run initialization after all functions and event listeners have been defined.
     initializePlanner();
 })();
