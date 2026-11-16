@@ -1,0 +1,11 @@
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const root = path.join(__dirname, '..');
+const js = fs.readFileSync(path.join(root, 'js', 'planner.js'), 'utf8');
+const html = fs.readFileSync(path.join(root, 'MyPlannerPlus.html'), 'utf8');
+test('date sticker editor includes a size range', () => { assert.match(js, /slider\.type = "range"/); assert.match(js, /slider\.min = "50"/); assert.match(js, /slider\.max = "200"/); });
+test('date sticker size persists and redraws calendar', () => { assert.match(js, /sticker\.size = Number\(slider\.value\) \/ 100/); assert.match(js, /saveCalendarDecorations\(\)/); assert.match(js, /renderCalendar\(\)/); });
+test('photo and emoji sizes both apply to calendar grid', () => { assert.match(js, /25 \* Math\.min\(2/); assert.match(js, /15 \* Math\.min\(2/); });
+test('sticker removal remains available', () => { assert.match(js, /remove\.textContent = "Remove"/); assert.match(html, /Size slider/); });

@@ -22,7 +22,7 @@
         <div class="folder-label">
           MY LIFE
         </div>
-        <div class="user-name">
+        <div class="user-name"><span id="userGreeting">Hey!</span> 
           <span id="currentUserName">Account</span>
           <button id="logoutButton" type="button">Log out</button>
         </div>
@@ -143,18 +143,9 @@
                   </h4>
                   <div class="sticker-options note-options">
                     <!-- One single sticker option -->
-                    <button class="sticker-option note-sticker" data-color="default" data-sticker="📌" draggable="true" id="mainNoteSticker">
-                      📌 Sticky Note
+                    <button class="sticker-option note-sticker" data-color="default" data-sticker="" draggable="true" id="mainNoteSticker">
+                      Sticky Note
                     </button>
-                    <!-- Color choices to apply to the sticker -->
-                    <div class="color-picker-container note-color-picker">
-                      <button aria-label="Select default note color" aria-pressed="true" class="note-color-option default" data-note-color="default" title="Yellow Default" type="button">
-                      </button>
-                      <button aria-label="Select reminder note color" aria-pressed="false" class="note-color-option reminder" data-note-color="reminder" title="Pink Reminder" type="button">
-                      </button>
-                      <button aria-label="Select idea note color" aria-pressed="false" class="note-color-option idea" data-note-color="idea" title="Green Idea" type="button">
-                      </button>
-                    </div>
                   </div>
                 </div>
                 <div class="mood-upload-tools">
@@ -171,7 +162,7 @@
                 </button>
               </aside>
               <div class="mood-board-wrap">
-                <div class="mood-board-heading">
+                <div class="board-customize panel"><label for="boardBackground">Board background</label><input type="color" id="boardBackground" value="#fffdf8"><label for="stickerColor">Sticker color</label><input type="color" id="stickerColor" value="#f6d7e2"><label for="stickerSize">Sticker size</label><input type="range" id="stickerSize" min="30" max="220" value="65"><button type="button" id="bringForward">Bring forward</button><button type="button" id="sendBackward">Send backward</button></div><div class="mood-board-heading">
                   <h3>
                     My Mood Board
                   </h3>
@@ -190,7 +181,7 @@
                   </div>
                 </div>
                 <p class="board-help">
-                  Tip: Drag stickers to rearrange them. Click a sticker and press Delete to remove it. Your board saves to your account.
+                  Tip: Select a sticker to change its color, size, or layer. Drag to move it. Press Delete to remove it. Your board saves to your account.
                 </p>
               </div>
             </div>
@@ -278,7 +269,7 @@
                     🗓️ This Week's To-Dos
                   </h3>
                   <p class="empty-note">
-                    All calendar events for this week appear here, including Work, School, Home, and Other.
+                    All calendar events for this week appear here, including events from all calendars.
                   </p>
                   <div class="selected-date-title" id="workWeekRange">
                   </div>
@@ -325,7 +316,7 @@
                   </button>
                 </div>
                 <p class="calendar-sticker-note">
-                  Choose a day on the calendar first. Tap a sticker below to remove it from that day. Uploaded photos are saved to your account.
+                  Choose a calendar date, add a sticker or photo, then use its Size slider (50%–200%) to resize it. Use Remove to delete a single sticker. Changes save to your account.
                 </p>
                 <div aria-label="Stickers on selected date" class="calendar-sticker-preview" id="calendarStickerPreview">
                 </div>
@@ -355,23 +346,6 @@
           Time (optional)
         </label>
         <input id="eventTime" type="time"/>
-        <label for="eventCategory">
-          Category
-        </label>
-        <select id="eventCategory">
-          <option value="work">
-            Work
-          </option>
-          <option value="school">
-            School
-          </option>
-          <option value="home">
-            Home
-          </option>
-          <option value="other">
-            Other
-          </option>
-        </select>
         <div class="modal-actions">
           <button class="secondary-button" id="cancelEvent" type="button">
             Cancel
