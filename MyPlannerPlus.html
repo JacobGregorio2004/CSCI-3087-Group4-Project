@@ -1,380 +1,623 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
+<head>
+    <!-- Sets the character encoding so text and emojis display correctly -->
     <meta charset="utf-8"/>
+
+    <!-- Makes the website responsive on different screen sizes -->
     <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-    <title>
-      MyPlanner+
-    </title>
+
+    <!-- Title displayed in the browser tab -->
+    <title>MyPlanner+</title>
+
+    <!-- Connects the CSS file that controls the planner's appearance -->
     <link href="css/planner.css" rel="stylesheet"/>
+
+    <!-- Connects the JavaScript file used for backend API communication -->
     <script defer src="js/api.js"></script>
-    <script defer="" src="js/planner.js">
-    </script>
-  </head>
-  <body>
-      <h1 class="app-title">
-      MyPlanner
-      <span class="plus">
-        +
-      </span>
+
+    <!-- Connects the JavaScript file that handles planner interactions -->
+    <script defer src="js/planner.js"></script>
+</head>
+
+<body>
+    <!-- Main application title -->
+    <h1 class="app-title">
+        MyPlanner
+        <span class="plus">+</span>
     </h1>
-      <div class="planner-folder">
+
+    <!-- Main folder container that holds the planner interface -->
+    <div class="planner-folder">
+
+        <!-- Label displayed at the top of the planner -->
         <div class="folder-label">
-          MY LIFE
+            MY LIFE
         </div>
-        <div class="user-name"><span id="userGreeting">Hey!</span> 
-          <span id="currentUserName">Account</span>
-          <button id="logoutButton" type="button">Log out</button>
+
+        <!-- Displays the logged-in user's name and logout option -->
+        <div class="user-name">
+            <span id="userGreeting">Hey!</span>
+            <span id="currentUserName">Account</span>
+
+            <!-- JavaScript handles logging the user out -->
+            <button id="logoutButton" type="button">
+                Log out
+            </button>
         </div>
+
+        <!-- Navigation tabs used to switch between planner categories -->
         <nav class="tabs" id="tabs">
-          <button class="tab active" data-category="creative">
-            Mood Board
-          </button>
-          <button class="tab" data-category="work">
-            Work
-          </button>
-          <button class="tab" data-category="school">
-            School
-          </button>
-          <button class="tab" data-category="home">
-            Home
-          </button>
-          <a href="finance.html" class="tab">Finance</a>
-          <button class="tab" data-category="all">
-            All
-          </button>
-          <button aria-label="Add folder" class="add-tab" id="addFolderBtn">
-            +
-          </button>
+
+            <!-- Mood Board is the default active tab -->
+            <button class="tab active" data-category="creative">
+                Mood Board
+            </button>
+
+            <!-- Opens the Work calendar -->
+            <button class="tab" data-category="work">
+                Work
+            </button>
+
+            <!-- Opens the School calendar -->
+            <button class="tab" data-category="school">
+                School
+            </button>
+
+            <!-- Opens the Home calendar -->
+            <button class="tab" data-category="home">
+                Home
+            </button>
+
+            <!-- Navigates to the separate Finance page -->
+            <a href="finance.html" class="tab">
+                Finance
+            </a>
+
+            <!-- Displays events and tasks from all categories -->
+            <button class="tab" data-category="all">
+                All
+            </button>
+
+            <!-- Allows users to create their own custom folder -->
+            <button
+                aria-label="Add folder"
+                class="add-tab"
+                id="addFolderBtn">
+                +
+            </button>
         </nav>
+
+        <!-- Main content area that changes depending on the selected tab -->
         <main class="folder-content">
-          <section id="creativePage">
-            <h2 class="section-title">
-              Creative Corner ✦
-            </h2>
-            <p class="creative-description">
-              Make this space yours! Drag stickers onto your mood board, move them around, and add your own notes.
-            </p>
-            <div class="mood-layout">
-              <aside class="sticker-library panel">
-                <h3>
-                  Sticker Library
-                </h3>
-                <p class="library-hint">
-                  Drag a sticker onto your board, or tap one to add it.
+
+            <!-- MOOD BOARD SECTION -->
+            <!-- Allows users to decorate a personal board with stickers,
+                 sticky notes, and uploaded photos -->
+            <section id="creativePage">
+
+                <h2 class="section-title">
+                    Creative Corner ✦
+                </h2>
+
+                <!-- Instructions explaining how to use the mood board -->
+                <p class="creative-description">
+                    Make this space yours! Drag stickers onto your mood board,
+                    move them around, and add your own notes.
                 </p>
-                <div class="sticker-category">
-                  <h4>
-                    Moods
-                  </h4>
-                  <div class="sticker-options">
-                    <button class="sticker-option" data-sticker="😊" draggable="true" title="Happy">
-                      😊
-                    </button>
-                    <button class="sticker-option" data-sticker="🥰" draggable="true" title="Loved">
-                      🥰
-                    </button>
-                    <button class="sticker-option" data-sticker="😌" draggable="true" title="Calm">
-                      😌
-                    </button>
-                    <button class="sticker-option" data-sticker="😴" draggable="true" title="Tired">
-                      😴
-                    </button>
-                    <button class="sticker-option" data-sticker="😤" draggable="true" title="Stressed">
-                      😤
-                    </button>
-                    <button class="sticker-option" data-sticker="🤩" draggable="true" title="Excited">
-                      🤩
-                    </button>
-                    <button class="sticker-option" data-sticker="🥹" draggable="true" title="Emotional">
-                      🥹
-                    </button>
-                    <button class="sticker-option" data-sticker="😎" draggable="true" title="Confident">
-                      😎
-                    </button>
-                  </div>
+
+                <!-- Layout containing the sticker library and mood board -->
+                <div class="mood-layout">
+
+                    <!-- STICKER LIBRARY -->
+                    <!-- Contains stickers that users can add to their board -->
+                    <aside class="sticker-library panel">
+
+                        <h3>Sticker Library</h3>
+
+                        <p class="library-hint">
+                            Drag a sticker onto your board, or tap one to add it.
+                        </p>
+
+                        <!-- MOOD STICKERS -->
+                        <!-- Each button contains a different emoji sticker -->
+                        <!-- data-sticker identifies the emoji for JavaScript -->
+                        <!-- draggable allows users to drag stickers onto the board -->
+                        <div class="sticker-category">
+
+                            <h4>Moods</h4>
+
+                            <div class="sticker-options">
+                                <button class="sticker-option" data-sticker="😊" draggable="true" title="Happy">😊</button>
+                                <button class="sticker-option" data-sticker="🥰" draggable="true" title="Loved">🥰</button>
+                                <button class="sticker-option" data-sticker="😌" draggable="true" title="Calm">😌</button>
+                                <button class="sticker-option" data-sticker="😴" draggable="true" title="Tired">😴</button>
+                                <button class="sticker-option" data-sticker="😤" draggable="true" title="Stressed">😤</button>
+                                <button class="sticker-option" data-sticker="🤩" draggable="true" title="Excited">🤩</button>
+                                <button class="sticker-option" data-sticker="🥹" draggable="true" title="Emotional">🥹</button>
+                                <button class="sticker-option" data-sticker="😎" draggable="true" title="Confident">😎</button>
+                            </div>
+                        </div>
+
+                        <!-- DECORATION STICKERS -->
+                        <!-- Provides additional emojis for customizing the board -->
+                        <div class="sticker-category">
+
+                            <h4>Decorations</h4>
+
+                            <div class="sticker-options">
+                                <button class="sticker-option" data-sticker="🌸" draggable="true">🌸</button>
+                                <button class="sticker-option" data-sticker="⭐" draggable="true">⭐</button>
+                                <button class="sticker-option" data-sticker="💗" draggable="true">💗</button>
+                                <button class="sticker-option" data-sticker="🦋" draggable="true">🦋</button>
+                                <button class="sticker-option" data-sticker="🌈" draggable="true">🌈</button>
+                                <button class="sticker-option" data-sticker="☁️" draggable="true">☁️</button>
+                                <button class="sticker-option" data-sticker="🎀" draggable="true">🎀</button>
+                                <button class="sticker-option" data-sticker="🍓" draggable="true">🍓</button>
+                                <button class="sticker-option" data-sticker="📚" draggable="true">📚</button>
+                                <button class="sticker-option" data-sticker="☕" draggable="true">☕</button>
+                                <button class="sticker-option" data-sticker="🎧" draggable="true">🎧</button>
+                                <button class="sticker-option" data-sticker="🧸" draggable="true">🧸</button>
+                            </div>
+                        </div>
+
+                        <!-- STICKY NOTE OPTION -->
+                        <!-- Allows users to add a note to their mood board -->
+                        <div class="sticker-category">
+
+                            <h4>Sticky Notes</h4>
+
+                            <div class="sticker-options note-options">
+
+                                <!-- Single sticky note template -->
+                                <button
+                                    class="sticker-option note-sticker"
+                                    data-color="default"
+                                    data-sticker=""
+                                    draggable="true"
+                                    id="mainNoteSticker">
+                                    Sticky Note
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- PHOTO UPLOAD -->
+                        <!-- Lets users upload their own images as stickers -->
+                        <div class="mood-upload-tools">
+
+                            <label for="moodBoardPhotoUpload">
+                                📷 Upload your own photo sticker
+                            </label>
+
+                            <!-- Accepts image files and allows multiple uploads -->
+                            <input
+                                accept="image/*"
+                                id="moodBoardPhotoUpload"
+                                multiple=""
+                                type="file"/>
+
+                            <p class="library-hint">
+                                Upload one or more photos. Drag them around
+                                the board just like other stickers.
+                            </p>
+                        </div>
+
+                        <!-- Button used to remove all items from the mood board -->
+                        <button
+                            class="primary-button clear-mood-board-button"
+                            id="clearMoodBoard"
+                            type="button">
+                            Clear board
+                        </button>
+                    </aside>
+
+                    <!-- MOOD BOARD DISPLAY -->
+                    <div class="mood-board-wrap">
+
+                        <!-- CUSTOMIZATION TOOLS -->
+                        <!-- Allows users to change board and sticker appearance -->
+                        <div class="board-customize panel">
+
+                            <!-- Changes the background color of the board -->
+                            <label for="boardBackground">
+                                Board background
+                            </label>
+                            <input
+                                type="color"
+                                id="boardBackground"
+                                value="#fffdf8">
+
+                            <!-- Changes the color of supported stickers -->
+                            <label for="stickerColor">
+                                Sticker color
+                            </label>
+                            <input
+                                type="color"
+                                id="stickerColor"
+                                value="#f6d7e2">
+
+                            <!-- Slider used to resize selected stickers -->
+                            <label for="stickerSize">
+                                Sticker size
+                            </label>
+                            <input
+                                type="range"
+                                id="stickerSize"
+                                min="30"
+                                max="220"
+                                value="65">
+
+                            <!-- Changes the selected sticker's layer order -->
+                            <button type="button" id="bringForward">
+                                Bring forward
+                            </button>
+
+                            <button type="button" id="sendBackward">
+                                Send backward
+                            </button>
+                        </div>
+
+                        <!-- Mood board heading -->
+                        <div class="mood-board-heading">
+                            <h3>My Mood Board</h3>
+
+                            <span class="board-tip">
+                                Drop stickers anywhere ✨
+                            </span>
+                        </div>
+
+                        <!-- Main area where stickers and photos are placed -->
+                        <!-- JavaScript manages adding, moving, and saving items -->
+                        <div
+                            aria-label="Your personal mood board"
+                            class="mood-board"
+                            id="moodBoard">
+
+                            <!-- Placeholder displayed when the board is empty -->
+                            <div class="board-empty" id="boardEmpty">
+                                Your board is waiting for you!
+                                <br/>
+                                <span>
+                                    Drag stickers here or tap a sticker to start.
+                                </span>
+                                🌷
+                            </div>
+                        </div>
+
+                        <!-- Instructions for editing stickers -->
+                        <p class="board-help">
+                            Tip: Select a sticker to change its color, size,
+                            or layer. Drag to move it. Press Delete to remove it.
+                            Your board saves to your account.
+                        </p>
+                    </div>
                 </div>
-                <div class="sticker-category">
-                  <h4>
-                    Decorations
-                  </h4>
-                  <div class="sticker-options">
-                    <button class="sticker-option" data-sticker="🌸" draggable="true">
-                      🌸
+            </section>
+
+            <!-- CALENDAR SECTION -->
+            <!-- Initially hidden because the Mood Board opens by default -->
+            <!-- JavaScript displays this section when a calendar tab is selected -->
+            <section class="hidden" id="calendarPage">
+
+                <!-- Calendar title can change based on the selected category -->
+                <h2 class="section-title" id="calendarTitle">
+                    Calendar
+                </h2>
+
+                <!-- CALENDAR NAVIGATION -->
+                <!-- Allows users to move between months or return to today -->
+                <div class="calendar-toolbar">
+
+                    <button class="toolbar-button" id="prevMonth">
+                        ← Previous
                     </button>
-                    <button class="sticker-option" data-sticker="⭐" draggable="true">
-                      ⭐
+
+                    <!-- JavaScript inserts the current month and year here -->
+                    <div class="month-heading" id="monthHeading"></div>
+
+                    <button class="toolbar-button" id="nextMonth">
+                        Next →
                     </button>
-                    <button class="sticker-option" data-sticker="💗" draggable="true">
-                      💗
+
+                    <button class="secondary-button" id="todayBtn">
+                        Today
                     </button>
-                    <button class="sticker-option" data-sticker="🦋" draggable="true">
-                      🦋
-                    </button>
-                    <button class="sticker-option" data-sticker="🌈" draggable="true">
-                      🌈
-                    </button>
-                    <button class="sticker-option" data-sticker="☁️" draggable="true">
-                      ☁️
-                    </button>
-                    <button class="sticker-option" data-sticker="🎀" draggable="true">
-                      🎀
-                    </button>
-                    <button class="sticker-option" data-sticker="🍓" draggable="true">
-                      🍓
-                    </button>
-                    <button class="sticker-option" data-sticker="📚" draggable="true">
-                      📚
-                    </button>
-                    <button class="sticker-option" data-sticker="☕" draggable="true">
-                      ☕
-                    </button>
-                    <button class="sticker-option" data-sticker="🎧" draggable="true">
-                      🎧
-                    </button>
-                    <button class="sticker-option" data-sticker="🧸" draggable="true">
-                      🧸
-                    </button>
-                  </div>
                 </div>
-                <div class="sticker-category">
-                  <h4>
-                    Sticky Notes
-                  </h4>
-                  <div class="sticker-options note-options">
-                    <!-- One single sticker option -->
-                    <button class="sticker-option note-sticker" data-color="default" data-sticker="" draggable="true" id="mainNoteSticker">
-                      Sticky Note
+
+                <!-- CALENDAR GRID -->
+                <div class="calendar-wrapper">
+                    <div class="calendar">
+
+                        <!-- Displays the seven days of the week -->
+                        <div class="calendar-header">
+                            <div>SUN</div>
+                            <div>MON</div>
+                            <div>TUE</div>
+                            <div>WED</div>
+                            <div>THU</div>
+                            <div>FRI</div>
+                            <div>SAT</div>
+                        </div>
+
+                        <!-- JavaScript dynamically generates the calendar dates -->
+                        <div class="calendar-grid" id="calendarGrid"></div>
+                    </div>
+                </div>
+
+                <!-- Button to expand or collapse additional planner details -->
+                <!-- aria-expanded helps communicate the state to screen readers -->
+                <div class="details-toggle-row">
+                    <button
+                        aria-controls="calendarDetails"
+                        aria-expanded="false"
+                        class="details-toggle"
+                        id="toggleCalendarDetails"
+                        type="button">
+                        ✏️ Show planner details
                     </button>
-                  </div>
                 </div>
-                <div class="mood-upload-tools">
-                  <label for="moodBoardPhotoUpload">
-                    📷 Upload your own photo sticker
-                  </label>
-                  <input accept="image/*" id="moodBoardPhotoUpload" multiple="" type="file"/>
-                  <p class="library-hint">
-                    Upload one or more photos. Drag them around the board just like other stickers.
-                  </p>
+
+                <!-- PLANNER DETAILS -->
+                <!-- Hidden until the user clicks the details toggle button -->
+                <div class="calendar-details hidden" id="calendarDetails">
+
+                    <div class="below-calendar">
+
+                        <!-- EVENTS PANEL -->
+                        <!-- Displays events for the selected calendar date -->
+                        <section class="panel">
+                            <h3>📅 Events</h3>
+
+                            <!-- Shows the date currently selected by the user -->
+                            <div
+                                class="selected-date-title"
+                                id="selectedDateTitle">
+                            </div>
+
+                            <!-- JavaScript inserts the events for this date -->
+                            <div id="eventList"></div>
+
+                            <!-- Opens the event form modal -->
+                            <button
+                                class="primary-button add-event-button"
+                                id="addEventBtn">
+                                + Add event to this date
+                            </button>
+                        </section>
+
+                        <!-- TO-DO LIST PANEL -->
+                        <!-- Allows users to create and manage tasks -->
+                        <section class="panel">
+                            <h3>✏️ To-Do List</h3>
+
+                            <!-- Form used to add a new task -->
+                            <form class="todo-form" id="todoForm">
+
+                                <!-- Limits task names to 160 characters -->
+                                <input
+                                    aria-label="New task"
+                                    id="todoInput"
+                                    maxlength="160"
+                                    placeholder="Add a task..."
+                                    type="text"/>
+
+                                <!-- Submits the new task -->
+                                <button type="submit">+</button>
+                            </form>
+
+                            <!-- JavaScript displays the user's tasks here -->
+                            <div id="todoList"></div>
+                        </section>
+
+                        <!-- WEEKLY TO-DO PANEL -->
+                        <!-- Displays a summary of calendar events for the week -->
+                        <section
+                            class="panel work-week-panel"
+                            id="workWeekPanel">
+
+                            <h3>🗓️ This Week's To-Dos</h3>
+
+                            <p class="empty-note">
+                                All calendar events for this week appear here,
+                                including events from all calendars.
+                            </p>
+
+                            <!-- Displays the current week's date range -->
+                            <div
+                                class="selected-date-title"
+                                id="workWeekRange">
+                            </div>
+
+                            <!-- JavaScript inserts weekly items here -->
+                            <div id="workWeekTodoList"></div>
+                        </section>
+                    </div>
+
+                    <!-- CALENDAR CREATIVE CORNER -->
+                    <!-- Allows users to decorate individual calendar dates -->
+                    <section class="compact-creative">
+
+                        <div class="compact-creative-head">
+                            <h3>✨ A Little Creative Corner</h3>
+
+                            <span class="board-tip">
+                                Decorate the selected calendar date with
+                                stickers or your own photos
+                            </span>
+                        </div>
+
+                        <!-- Displays the selected date for sticker customization -->
+                        <div
+                            class="selected-date-title"
+                            id="creativeStickerDate">
+                        </div>
+
+                        <!-- CALENDAR STICKER TOOLS -->
+                        <!-- Each button adds a decoration to the selected date -->
+                        <div
+                            aria-label="Add decorations to selected calendar date"
+                            class="calendar-sticker-tools">
+
+                            <button aria-label="Add flower sticker" data-calendar-sticker="🌸" type="button">🌸</button>
+                            <button aria-label="Add star sticker" data-calendar-sticker="⭐" type="button">⭐</button>
+                            <button aria-label="Add heart sticker" data-calendar-sticker="💗" type="button">💗</button>
+                            <button aria-label="Add butterfly sticker" data-calendar-sticker="🦋" type="button">🦋</button>
+                            <button aria-label="Add cloud sticker" data-calendar-sticker="☁️" type="button">☁️</button>
+                            <button aria-label="Add bow sticker" data-calendar-sticker="🎀" type="button">🎀</button>
+
+                            <!-- Allows users to upload a photo for a calendar date -->
+                            <label for="calendarStickerUpload">
+                                📷 Upload photo sticker
+                            </label>
+
+                            <input
+                                accept="image/*"
+                                id="calendarStickerUpload"
+                                type="file"/>
+
+                            <!-- Removes decorations from the selected date -->
+                            <button
+                                class="secondary-button clear-calendar-stickers-button"
+                                id="clearCalendarStickers"
+                                type="button">
+                                Clear this date
+                            </button>
+                        </div>
+
+                        <!-- Instructions for resizing and removing decorations -->
+                        <p class="calendar-sticker-note">
+                            Choose a calendar date, add a sticker or photo,
+                            then use its Size slider (50%–200%) to resize it.
+                            Use Remove to delete a single sticker.
+                            Changes save to your account.
+                        </p>
+
+                        <!-- Displays stickers attached to the selected date -->
+                        <div
+                            aria-label="Stickers on selected date"
+                            class="calendar-sticker-preview"
+                            id="calendarStickerPreview">
+                        </div>
+                    </section>
                 </div>
-                <button class="primary-button clear-mood-board-button" id="clearMoodBoard" type="button">
-                  Clear board
-                </button>
-              </aside>
-              <div class="mood-board-wrap">
-                <div class="board-customize panel"><label for="boardBackground">Board background</label><input type="color" id="boardBackground" value="#fffdf8"><label for="stickerColor">Sticker color</label><input type="color" id="stickerColor" value="#f6d7e2"><label for="stickerSize">Sticker size</label><input type="range" id="stickerSize" min="30" max="220" value="65"><button type="button" id="bringForward">Bring forward</button><button type="button" id="sendBackward">Send backward</button></div><div class="mood-board-heading">
-                  <h3>
-                    My Mood Board
-                  </h3>
-                  <span class="board-tip">
-                    Drop stickers anywhere ✨
-                  </span>
-                </div>
-                <div aria-label="Your personal mood board" class="mood-board" id="moodBoard">
-                  <div class="board-empty" id="boardEmpty">
-                    Your board is waiting for you!
-                    <br/>
-                    <span>
-                      Drag stickers here or tap a sticker to start.
-                    </span>
-                    🌷
-                  </div>
-                </div>
-                <p class="board-help">
-                  Tip: Select a sticker to change its color, size, or layer. Drag to move it. Press Delete to remove it. Your board saves to your account.
-                </p>
-              </div>
-            </div>
-          </section>
-          <section class="hidden" id="calendarPage">
-            <h2 class="section-title" id="calendarTitle">
-              Calendar
-            </h2>
-            <div class="calendar-toolbar">
-              <button class="toolbar-button" id="prevMonth">
-                ← Previous
-              </button>
-              <div class="month-heading" id="monthHeading">
-              </div>
-              <button class="toolbar-button" id="nextMonth">
-                Next →
-              </button>
-              <button class="secondary-button" id="todayBtn">
-                Today
-              </button>
-            </div>
-            <div class="calendar-wrapper">
-              <div class="calendar">
-                <div class="calendar-header">
-                  <div>
-                    SUN
-                  </div>
-                  <div>
-                    MON
-                  </div>
-                  <div>
-                    TUE
-                  </div>
-                  <div>
-                    WED
-                  </div>
-                  <div>
-                    THU
-                  </div>
-                  <div>
-                    FRI
-                  </div>
-                  <div>
-                    SAT
-                  </div>
-                </div>
-                <div class="calendar-grid" id="calendarGrid">
-                </div>
-              </div>
-            </div>
-            <div class="details-toggle-row">
-              <button aria-controls="calendarDetails" aria-expanded="false" class="details-toggle" id="toggleCalendarDetails" type="button">
-                ✏️ Show planner details
-              </button>
-            </div>
-            <div class="calendar-details hidden" id="calendarDetails">
-              <div class="below-calendar">
-                <section class="panel">
-                  <h3>
-                    📅 Events
-                  </h3>
-                  <div class="selected-date-title" id="selectedDateTitle">
-                  </div>
-                  <div id="eventList">
-                  </div>
-                  <button class="primary-button add-event-button" id="addEventBtn">
-                    + Add event to this date
-                  </button>
-                </section>
-                <section class="panel">
-                  <h3>
-                    ✏️ To-Do List
-                  </h3>
-                  <form class="todo-form" id="todoForm">
-                    <input aria-label="New task" id="todoInput" maxlength="160" placeholder="Add a task..." type="text"/>
-                    <button type="submit">
-                      +
-                    </button>
-                  </form>
-                  <div id="todoList">
-                  </div>
-                </section>
-                <section class="panel work-week-panel" id="workWeekPanel">
-                  <h3>
-                    🗓️ This Week's To-Dos
-                  </h3>
-                  <p class="empty-note">
-                    All calendar events for this week appear here, including events from all calendars.
-                  </p>
-                  <div class="selected-date-title" id="workWeekRange">
-                  </div>
-                  <div id="workWeekTodoList">
-                  </div>
-                </section>
-              </div>
-              <section class="compact-creative">
-                <div class="compact-creative-head">
-                  <h3>
-                    ✨ A Little Creative Corner
-                  </h3>
-                  <span class="board-tip">
-                    Decorate the selected calendar date with stickers or your own photos
-                  </span>
-                </div>
-                <div class="selected-date-title" id="creativeStickerDate">
-                </div>
-                <div aria-label="Add decorations to selected calendar date" class="calendar-sticker-tools">
-                  <button aria-label="Add flower sticker" data-calendar-sticker="🌸" type="button">
-                    🌸
-                  </button>
-                  <button aria-label="Add star sticker" data-calendar-sticker="⭐" type="button">
-                    ⭐
-                  </button>
-                  <button aria-label="Add heart sticker" data-calendar-sticker="💗" type="button">
-                    💗
-                  </button>
-                  <button aria-label="Add butterfly sticker" data-calendar-sticker="🦋" type="button">
-                    🦋
-                  </button>
-                  <button aria-label="Add cloud sticker" data-calendar-sticker="☁️" type="button">
-                    ☁️
-                  </button>
-                  <button aria-label="Add bow sticker" data-calendar-sticker="🎀" type="button">
-                    🎀
-                  </button>
-                  <label for="calendarStickerUpload">
-                    📷 Upload photo sticker
-                  </label>
-                  <input accept="image/*" id="calendarStickerUpload" type="file"/>
-                  <button class="secondary-button clear-calendar-stickers-button" id="clearCalendarStickers" type="button">
-                    Clear this date
-                  </button>
-                </div>
-                <p class="calendar-sticker-note">
-                  Choose a calendar date, add a sticker or photo, then use its Size slider (50%–200%) to resize it. Use Remove to delete a single sticker. Changes save to your account.
-                </p>
-                <div aria-label="Stickers on selected date" class="calendar-sticker-preview" id="calendarStickerPreview">
-                </div>
-              </section>
-            </div>
-          </section>
+            </section>
         </main>
-      </div>
     </div>
+
+    <!-- FOOTER -->
+    <!-- Displays the application name and year -->
     <footer class="footer">
-      2026 MyPlanner+
+        2026 MyPlanner+
     </footer>
-    <div aria-labelledby="eventModalTitle" aria-modal="true" class="modal" id="eventModal" role="dialog">
-      <form class="modal-box" id="eventForm">
-        <h2 id="eventModalTitle">
-          Add calendar event
-        </h2>
-        <label for="eventName">
-          Event name
-        </label>
-        <input id="eventName" maxlength="120" placeholder="e.g. Club meeting" required=""/>
-        <label for="eventDate">
-          Date
-        </label>
-        <input id="eventDate" required="" type="date"/>
-        <label for="eventTime">
-          Time (optional)
-        </label>
-        <input id="eventTime" type="time"/>
-        <div class="modal-actions">
-          <button class="secondary-button" id="cancelEvent" type="button">
-            Cancel
-          </button>
-          <button class="primary-button" type="submit">
-            Save event
-          </button>
-        </div>
-      </form>
+
+    <!-- ADD EVENT MODAL -->
+    <!-- Popup form used to create a new calendar event -->
+    <!-- aria-modal and role identify this as a dialog -->
+    <div
+        aria-labelledby="eventModalTitle"
+        aria-modal="true"
+        class="modal"
+        id="eventModal"
+        role="dialog">
+
+        <!-- Form containing the event information -->
+        <form class="modal-box" id="eventForm">
+
+            <h2 id="eventModalTitle">
+                Add calendar event
+            </h2>
+
+            <!-- Event name is required and limited to 120 characters -->
+            <label for="eventName">
+                Event name
+            </label>
+            <input
+                id="eventName"
+                maxlength="120"
+                placeholder="e.g. Club meeting"
+                required=""/>
+
+            <!-- Date is required for every calendar event -->
+            <label for="eventDate">
+                Date
+            </label>
+            <input
+                id="eventDate"
+                required=""
+                type="date"/>
+
+            <!-- Time is optional so users can create events without a time -->
+            <label for="eventTime">
+                Time (optional)
+            </label>
+            <input
+                id="eventTime"
+                type="time"/>
+
+            <!-- Buttons to cancel or save the event -->
+            <div class="modal-actions">
+
+                <!-- JavaScript handles closing the modal -->
+                <button
+                    class="secondary-button"
+                    id="cancelEvent"
+                    type="button">
+                    Cancel
+                </button>
+
+                <!-- Submits the event form -->
+                <button class="primary-button" type="submit">
+                    Save event
+                </button>
+            </div>
+        </form>
     </div>
-    <div aria-labelledby="folderModalTitle" aria-modal="true" class="modal" id="folderModal" role="dialog">
-      <form class="modal-box" id="folderForm">
-        <h2 id="folderModalTitle">
-          Create folder
-        </h2>
-        <label for="folderName">
-          Folder name
-        </label>
-        <input id="folderName" maxlength="25" placeholder="e.g. Fitness, Travel" required=""/>
-        <div class="modal-actions">
-          <button class="secondary-button" id="cancelFolder" type="button">
-            Cancel
-          </button>
-          <button class="primary-button" type="submit">
-            Create
-          </button>
-        </div>
-      </form>
+
+    <!-- CREATE FOLDER MODAL -->
+    <!-- Popup form that lets users add custom planner categories -->
+    <div
+        aria-labelledby="folderModalTitle"
+        aria-modal="true"
+        class="modal"
+        id="folderModal"
+        role="dialog">
+
+        <form class="modal-box" id="folderForm">
+
+            <h2 id="folderModalTitle">
+                Create folder
+            </h2>
+
+            <!-- User enters a custom folder name -->
+            <!-- Maximum of 25 characters prevents overly long tab names -->
+            <label for="folderName">
+                Folder name
+            </label>
+
+            <input
+                id="folderName"
+                maxlength="25"
+                placeholder="e.g. Fitness, Travel"
+                required=""/>
+
+            <!-- Buttons to cancel or create the folder -->
+            <div class="modal-actions">
+
+                <button
+                    class="secondary-button"
+                    id="cancelFolder"
+                    type="button">
+                    Cancel
+                </button>
+
+                <!-- Submits the folder creation form -->
+                <button class="primary-button" type="submit">
+                    Create
+                </button>
+            </div>
+        </form>
     </div>
-  </body>
+</body>
 </html>
+
 
