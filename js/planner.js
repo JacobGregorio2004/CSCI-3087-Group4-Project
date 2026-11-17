@@ -51,8 +51,8 @@
         const grid = $("calendarGrid");
         grid.innerHTML = "";
         const first = new Date(viewYear, viewMonth, 1);
-        const mondayOffset = (first.getDay() + 6) % 7;
-        const start = new Date(viewYear, viewMonth, 1 - mondayOffset);
+        const sundayOffset = first.getDay();
+        const start = new Date(viewYear, viewMonth, 1 - sundayOffset);
         const todayISO = toISODate(new Date());
         for (let i = 0; i < 42; i++) {
             const date = new Date(start);
