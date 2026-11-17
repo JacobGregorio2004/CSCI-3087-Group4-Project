@@ -863,8 +863,7 @@
     async function initializePlanner() {
         try {
             const user = await MyPlannerAPI.requireSession();
-            $("currentUserName").textContent = user.name;
-            $("userGreeting").textContent = "Hey, " + user.name + "!";
+           $("userGreeting").textContent = "Hey, " + user.name + "!";
             // The API returns the current user’s saved planner data; fall back to empty arrays if missing.
             const state = await MyPlannerAPI.getState();
             events = Array.isArray(state.events) ? state.events : [];
